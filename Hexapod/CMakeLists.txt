@@ -39,7 +39,7 @@ project(Hexapod CXX C ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-add_subdirectory("pimoroni-pico")
+add_subdirectory("external")
 # Add executable. Default name is the project name, version 0.1
 
 set(${PROJECT_NAME}_SRCS
@@ -75,7 +75,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}
   ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required
   ${CMAKE_CURRENT_LIST_DIR}/includes
-  ${CMAKE_CURRENT_LIST_DIR}/pimoroni-pico
+  ${CMAKE_CURRENT_LIST_DIR}/external/pimoroni-pico
   ${PICO_SDK_PATH}/include # add this to ensure SDK headers are included
 )
 
