@@ -43,18 +43,18 @@ add_subdirectory("pimoroni-pico")
 # Add executable. Default name is the project name, version 0.1
 
 set(${PROJECT_NAME}_SRCS
-    Animation.cpp
-    Calculate.cpp
-    Hexapod.cpp
-    Move.cpp
+    src/Animation.cpp
+    src/Calculate.cpp
+    src/Hexapod.cpp
+    src/Move.cpp
 )
 
 set(${PROJECT_NAME}_HDRS
-    Animation.h
-    Calculate.h
-    Hexapod.h
-    Move.h
-    DataPacket.h
+    includes/Animation.h
+    includes/Calculate.h
+    includes/Hexapod.h
+    includes/Move.h
+    includes/DataPacket.h
 )
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS} ${${PROJECT_NAME}_HDRS})
@@ -74,9 +74,8 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}
   ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required
+  ${CMAKE_CURRENT_LIST_DIR}/includes
   ${CMAKE_CURRENT_LIST_DIR}/pimoroni-pico
-  ${CMAKE_CURRENT_LIST_DIR}/pimoroni-pico/libraries/servo2040
-  #${CMAKE_CURRENT_LIST_DIR}/pimoroni-pico/drivers/plasma
   ${PICO_SDK_PATH}/include # add this to ensure SDK headers are included
 )
 
