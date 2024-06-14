@@ -2,15 +2,19 @@
 
 using namespace std;
 
-//assigns the relavant servos to their corrosponding leg
-map<int, vector<int>> legs = {
-        {1, {0, 1, 2}},
-        {2, {3, 4, 5}},
-        {3, {6, 7, 8}},
-        {4, {9, 10, 11}},
-        {5, {12, 13, 14}},
-        {6, {15, 16, 17}}
-    };
+//Returns leg configuration based on given gate
+vector<vector<int>> Move::GetLegConfig(Gait gait){
+    switch (gait){
+        case tripod:
+            return {{1, 3, 5}, {2, 4, 6}};
+        case ripple:
+            return {{1, 6}, {3, 5}, {4, 2}};
+        case wave:
+            return {{6}, {5}, {4}, {3}, {2}, {1}};
+        default:
+            return {};
+    }
+};
 
 //moves leg tip to position through coordinates
 void Move::Coordinate(double x, double y, double z, int legNum){
