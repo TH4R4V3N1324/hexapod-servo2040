@@ -82,6 +82,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # Add any user requested libraries
 target_link_libraries(${PROJECT_NAME} 
         hardware_i2c
+        pico_multicore
         servo2040
         button
         )
