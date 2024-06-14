@@ -1,5 +1,19 @@
 #include "Animation.h"
 
+//Returns leg configuration based on given gate
+std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
+    switch (gait){
+        case tripod:
+            return {{1, 3, 5}, {2, 4, 6}};
+        case ripple:
+            return {{1, 6}, {3, 5}, {4, 2}};
+        case wave:
+            return {{6}, {5}, {4}, {3}, {2}, {1}};
+        default:
+            return {};
+    }
+};
+
 //move to home, deactivate servos
 void Animation::Shutdown(){
     std::vector<double> homePos {110, 110, 0};

@@ -2,20 +2,6 @@
 
 using namespace std;
 
-//Returns leg configuration based on given gate
-vector<vector<int>> Move::GetLegConfig(Gait gait){
-    switch (gait){
-        case tripod:
-            return {{1, 3, 5}, {2, 4, 6}};
-        case ripple:
-            return {{1, 6}, {3, 5}, {4, 2}};
-        case wave:
-            return {{6}, {5}, {4}, {3}, {2}, {1}};
-        default:
-            return {};
-    }
-};
-
 //moves leg tip to position through coordinates
 void Move::Coordinate(double x, double y, double z, int legNum){
     vector<int> legServos = legs[legNum];
