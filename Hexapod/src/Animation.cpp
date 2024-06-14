@@ -14,6 +14,18 @@ std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
     }
 };
 
+//Changes current gait to specified gait
+void Animation::SetGait(Gait gait){
+    currentGait = gait;
+}
+
+//Changes to the next gait when called
+void Animation::CycleGait(Animation &animation){
+    static Animation::Gait currentGait = Animation::tripod;
+    currentGait = static_cast<Animation::Gait>((currentGait + 1) % 3);
+    animation.SetGait(currentGait);
+};
+
 //move to home, deactivate servos
 void Animation::Shutdown(){
     std::vector<double> homePos {110, 110, 0};
