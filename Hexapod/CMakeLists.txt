@@ -83,6 +83,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME} 
         hardware_i2c
         servo2040
+        button
         )
 
 pico_add_extra_outputs(Hexapod)

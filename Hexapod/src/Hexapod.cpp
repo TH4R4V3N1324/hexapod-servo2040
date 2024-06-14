@@ -18,8 +18,11 @@ int main() {
 
     // Data structure to store received data from ESP32
     DataPacket receivedData;
+    
+    // Creates button on Servo2040 board
+    Button user_sw = Button(servo::servo2040::USER_SW);
 
-    while (true) {
+    while (!user_sw.raw()) {
         // Request data from ESP32
         i2c_write_blocking(I2C_PORT, ESP32_SLAVE_ADDR, NULL, 0, true);
 
