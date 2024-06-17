@@ -22,6 +22,6 @@ struct DataPacket {
 };
 #pragma pack(pop)
 
-extern DataPacket recievedData;
+extern DataPacket receivedData;
 
 #endif

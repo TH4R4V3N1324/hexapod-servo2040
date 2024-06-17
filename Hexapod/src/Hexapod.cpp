@@ -9,7 +9,7 @@
 // Creates button on Servo2040 board
 Button user_sw = Button(servo::servo2040::USER_SW);
 
-void ReadInputData (){
+void ReadInputData(){
     // Data structure to store received data from ESP32
     DataPacket receivedData;
 
@@ -58,6 +58,10 @@ int main() {
     gpio_pull_up(SCL_PIN);
 
     multicore_launch_core1(ReadInputData);
+
+    while(!user_sw.raw()){
+        sleep_ms(1);
+    }
 
     return 0;
 }

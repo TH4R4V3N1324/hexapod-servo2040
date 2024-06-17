@@ -29,8 +29,8 @@ vector<double> Calculate::direction(vector<double> start){
     int distance = 10;
     double startX = start[0];
     double startY = start[1];
-    double joy_x = recievedData.LStickX / 128;
-    double joy_y = recievedData.LStickY / 128;
+    double joy_x = receivedData.LStickX / 128;
+    double joy_y = receivedData.LStickY / 128;
 
     double angle = atan2(joy_y, joy_x);
     double deltaX = distance * cos(angle);
