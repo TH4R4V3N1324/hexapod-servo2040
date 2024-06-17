@@ -6,21 +6,12 @@
 #define SDA_PIN 0
 #define SCL_PIN 1
 
-int main() {
-    stdio_init_all();
+// Creates button on Servo2040 board
+Button user_sw = Button(servo::servo2040::USER_SW);
 
-    // Initialize I2C as master
-    i2c_init(I2C_PORT, 100 * 1000);
-    gpio_set_function(SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(SDA_PIN);
-    gpio_pull_up(SCL_PIN);
-
+void ReadInputData (){
     // Data structure to store received data from ESP32
     DataPacket receivedData;
-    
-    // Creates button on Servo2040 board
-    Button user_sw = Button(servo::servo2040::USER_SW);
 
     while (!user_sw.raw()) {
         // Request data from ESP32
@@ -53,8 +44,20 @@ int main() {
         }
 
         sleep_ms(500); // Wait for a second before requesting data again
-
     }
+}
+
+int main() {
+    stdio_init_all();
+
+    // Initialize I2C as master
+    i2c_init(I2C_PORT, 100 * 1000);
+    gpio_set_function(SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(SCL_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(SDA_PIN);
+    gpio_pull_up(SCL_PIN);
+
+    multicore_launch_core1(ReadInputData);
 
     return 0;
 }
