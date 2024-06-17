@@ -66,8 +66,10 @@ void Move::Arc(vector<double> start, vector<double> end, bool invert, int legNum
         if (invert == true){
             double z = arcCentre[2] - ((radius - a) / 2);
         }
-        else
+        else{
             double z = (radius - a) + arcCentre[2];
+        }
+            
         };
 
         vector<double> target {x, y, z};
