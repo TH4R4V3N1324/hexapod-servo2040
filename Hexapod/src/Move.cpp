@@ -2,6 +2,15 @@
 
 using namespace std;
 
+//returns leg position found in legPosition if it exists
+std::vector<double> Move::GetLegPosition(int legNum){
+    if (legPosition.find(legNum) != legPosition.end()) {
+        return legPosition[legNum];
+    } else {
+        return {};
+    }
+}
+
 //moves leg tip to position through coordinates
 void Move::Coordinate(double x, double y, double z, int legNum){
     vector<int> legServos = legs[legNum];
@@ -15,6 +24,8 @@ void Move::Coordinate(double x, double y, double z, int legNum){
         int angle = angles[i];
         cluster.value(servo, angle);
     }
+
+    legPosition[legNum] = position;
 };
 
 //moves leg tip to position through a vector
@@ -29,12 +40,13 @@ void Move::Position(vector<double> position, int legNum){
         int angle = angles[i];
         cluster.value(servo, angle);
     }
+
+    legPosition[legNum] = position;
 };
 
 //moves leg tip in straight line from start to end
-void Move::StraightLine(vector<double> start, vector<double> end, int legNum){
-    Position(start, legNum);
-    sleep_ms(200);
+void Move::StraightLine(vector<double> end, int legNum){
+    std::vector<double> start = legPosition[legNum];
 
     int resolution = 12;
     for(size_t i = 0; i < resolution + 1; i++){
@@ -48,7 +60,9 @@ void Move::StraightLine(vector<double> start, vector<double> end, int legNum){
 };
 
 //moves leg tip in an arc from start to end, can invert arc direction
-void Move::Arc(vector<double> start, vector<double> end, bool invert, int legNum){
+void Move::Arc(vector<double> end, bool invert, int legNum){
+    std::vector<double> start = legPosition[legNum];
+
     double x = (start[0] + end[0]) / 2;
     double y = (start[1] + end[1]) / 2;
     double z = (start[2] + end[2]) / 2;
@@ -68,13 +82,12 @@ void Move::Arc(vector<double> start, vector<double> end, bool invert, int legNum
         }
         else{
             double z = (radius - a) + arcCentre[2];
-        }
-            
-        };
+        }    
+    };
 
-        vector<double> target {x, y, z};
-        Position (target, legNum);
-        sleep_ms(50);
+    vector<double> target {x, y, z};
+    Position (target, legNum);
+    sleep_ms(50);
 };
 
 //turns the servos off in a given leg

@@ -5,6 +5,7 @@
 #include "Calculate.h"
 #include "DataPacket.h"
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <cmath>
 
@@ -14,6 +15,7 @@ private:
     const uint END_PIN = servo::servo2040::SERVO_18;
     const uint NUM_SERVOS = (END_PIN - START_PIN) + 1;
     servo::ServoCluster cluster = servo::ServoCluster(pio0, 0, START_PIN, NUM_SERVOS);
+    std::unordered_map<int, std::vector<double>> legPosition;
 
     //assigns the relavant servos to their corrosponding leg
     std::map<int, std::vector<int>> legs = {
@@ -26,10 +28,11 @@ private:
     };
 
 public:
+    std::vector<double> GetLegPosition (int legNum);
     void Coordinate(double x, double y, double z, int legNum);
     void Position(std::vector<double> position, int legNum);
-    void StraightLine(std::vector<double> start, std::vector<double> end, int legNum);
-    void Arc(std::vector<double> start, std::vector<double> end, bool invert, int legNum);
+    void StraightLine(std::vector<double> end, int legNum);
+    void Arc(std::vector<double> end, bool invert, int legNum);
     void Deactivate(int legNum);
 };
 
