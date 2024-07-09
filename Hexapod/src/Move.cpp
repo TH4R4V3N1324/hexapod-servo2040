@@ -26,6 +26,17 @@ bool Move::GetSwitchStatus(int legNum){
     return mux.read();
 }
 
+//
+bool Move::AllLegsGrounded(){
+    for (size_t i = 0; i < legSwitch.size(); ++i) {
+        if (!Move::GetSwitchStatus(i)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 //returns leg position found in legPosition if it exists
 std::vector<double> Move::GetLegPosition(int legNum){
     if (legPosition.find(legNum) != legPosition.end()) {

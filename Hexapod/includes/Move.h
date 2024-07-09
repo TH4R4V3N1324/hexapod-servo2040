@@ -44,8 +44,9 @@ private:
 public:
     Move();
     void SetupSwitches();
-    bool GetSwitchStatus (int legNum);
-    std::vector<double> GetLegPosition (int legNum);
+    bool GetSwitchStatus(int legNum);
+    bool AllLegsGrounded();
+    std::vector<double> GetLegPosition(int legNum);
     void Coordinate(double x, double y, double z, int legNum);
     void Position(std::vector<double> position, int legNum);
     void StraightLine(std::vector<double> end, int legNum);
