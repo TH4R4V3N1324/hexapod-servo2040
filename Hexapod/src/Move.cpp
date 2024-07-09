@@ -2,6 +2,8 @@
 
 using namespace std;
 
+unordered_map<int, vector<double>> Move::legPosition;
+
 Move::Move(){
     SetupSwitches();
 }

@@ -17,7 +17,7 @@ private:
     const uint END_PIN = servo::servo2040::SERVO_18;
     const uint NUM_SERVOS = (END_PIN - START_PIN) + 1;
     servo::ServoCluster cluster = servo::ServoCluster(pio0, 0, START_PIN, NUM_SERVOS);
-    std::unordered_map<int, std::vector<double>> legPosition;
+    static std::unordered_map<int, std::vector<double>> legPosition;
     Analog sen_adc = Analog(servo::servo2040::SHARED_ADC);
     AnalogMux mux = AnalogMux(servo::servo2040::ADC_ADDR_0, servo::servo2040::ADC_ADDR_1, servo::servo2040::ADC_ADDR_2, PIN_UNUSED, servo::servo2040::SHARED_ADC);
 
