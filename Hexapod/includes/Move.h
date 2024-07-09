@@ -2,6 +2,8 @@
 #define _MOVE_H_
 #include "pico/stdlib.h"
 #include "servo2040.hpp"
+#include "analogmux.hpp"
+#include "analog.hpp"
 #include "Calculate.h"
 #include "DataPacket.h"
 #include <map>
@@ -16,6 +18,8 @@ private:
     const uint NUM_SERVOS = (END_PIN - START_PIN) + 1;
     servo::ServoCluster cluster = servo::ServoCluster(pio0, 0, START_PIN, NUM_SERVOS);
     std::unordered_map<int, std::vector<double>> legPosition;
+    Analog sen_adc = Analog(servo::servo2040::SHARED_ADC);
+    AnalogMux mux = AnalogMux(servo::servo2040::ADC_ADDR_0, servo::servo2040::ADC_ADDR_1, servo::servo2040::ADC_ADDR_2, PIN_UNUSED, servo::servo2040::SHARED_ADC);
 
     //assigns the relavant servos to their corrosponding leg
     std::map<int, std::vector<int>> legs = {
@@ -27,7 +31,20 @@ private:
         {6, {15, 16, 17}}
     };
 
+    //assigns the relavant switch to its corrosponding leg
+    std::map<int, const uint> legSwitch = {
+        {1, servo::servo2040::SENSOR_1_ADDR},
+        {2, servo::servo2040::SENSOR_2_ADDR},
+        {3, servo::servo2040::SENSOR_3_ADDR},
+        {4, servo::servo2040::SENSOR_4_ADDR},
+        {5, servo::servo2040::SENSOR_5_ADDR},
+        {6, servo::servo2040::SENSOR_6_ADDR}
+    };
+
 public:
+    Move();
+    void SetupSwitches();
+    bool GetSwitchStatus (int legNum);
     std::vector<double> GetLegPosition (int legNum);
     void Coordinate(double x, double y, double z, int legNum);
     void Position(std::vector<double> position, int legNum);

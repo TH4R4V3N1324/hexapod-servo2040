@@ -85,6 +85,8 @@ target_link_libraries(${PROJECT_NAME}
         pico_multicore
         servo2040
         button
+        analogmux
+        analog
         )
 
 pico_add_extra_outputs(Hexapod)
