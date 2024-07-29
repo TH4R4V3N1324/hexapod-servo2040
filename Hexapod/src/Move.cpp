@@ -52,7 +52,7 @@ void Move::Coordinate(double x, double y, double z, int legNum){
     
     Calculate Cal;
     vector<double>position{x,y,z};
-    vector<double>angles {Cal.angle(position)};
+    vector<double>angles {Cal.angle(position, legNum)};
     
     for(size_t i = 0; i < legServos.size() && i < angles.size(); ++i){
         int servo = legServos[i];
@@ -68,7 +68,7 @@ void Move::Position(vector<double> position, int legNum){
     vector<int> legServos = legs[legNum];
     
     Calculate Cal;
-    vector<double>angles {Cal.angle(position)};
+    vector<double>angles {Cal.angle(position, legNum)};
 
     for(size_t i = 0; i < legServos.size() && i < angles.size(); ++i){
         int servo = legServos[i];

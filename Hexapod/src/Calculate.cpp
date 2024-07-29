@@ -2,14 +2,27 @@
 using namespace std;
 
 //inversekinematics, returns the angles needed to move to position
-vector<double> Calculate::angle(vector<double> position){
+vector<double> Calculate::angle(vector<double> position, int legNum){
     double x{position[0]}, y{position[1]}, z{position[2]};
+
+    LegConfig config = legConfigs[legNum];
+
+    if(config.rotationAngle != 0){
+        double xNew = x * cos(-config.rotationAngle) - y * sin(-config.rotationAngle);
+        double yNew = x * sin(-config.rotationAngle) + y * cos(-config.rotationAngle);
+        x = xNew;
+        y = yNew;
+    }
+
+    if(config.isMirrored){
+        y = -y;
+        x = -x;
+    }
      
     double a1 = coxaLength;
     double a2 = femurLength;
     double a3 = tibiaLength;
 
-    double pi = acos(-1.0);
     double coxaAngle = (atan2(x, y) * (180/pi))-45;
     double r1 = sqrt((pow(x,2) + pow(y,2))) - a1;
     double r2 = z;
