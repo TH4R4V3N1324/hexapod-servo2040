@@ -42,8 +42,13 @@ vector<double> Calculate::direction(vector<double> start){
     int distance = 10;
     double startX = start[0];
     double startY = start[1];
-    double joy_x = receivedData.LStickX / 128;
-    double joy_y = receivedData.LStickY / 128;
+
+    if (std::abs(receivedData.LStickX) <= 10 && std::abs(receivedData.LStickY) <= 10) {
+        return start;
+    }
+
+    double joy_x = static_cast<double>(receivedData.LStickX) / 128.0;
+    double joy_y = static_cast<double>(receivedData.LStickY) / 128.0;
 
     double angle = atan2(joy_y, joy_x);
     double deltaX = distance * cos(angle);
