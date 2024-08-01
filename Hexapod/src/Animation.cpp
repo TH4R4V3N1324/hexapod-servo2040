@@ -1,16 +1,23 @@
 #include "Animation.h"
 
+Move move;
+Calculate cal;
+
 //Returns leg configuration based on given gate
 std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
     switch (gait){
         case tripod:
             return {{1, 3, 5}, {2, 4, 6}};
+            break;
         case ripple:
             return {{1, 6}, {3, 5}, {4, 2}};
+            break;
         case wave:
             return {{6}, {5}, {4}, {3}, {2}, {1}};
+            break;
         default:
             return {};
+            break;
     }
 }
 
@@ -41,8 +48,6 @@ void Animation::CycleMode(Animation &animation){
 //move to home, deactivate servos
 void Animation::Shutdown(){
     std::vector<double> homePos {110, 110, 0};
-    Move move;
-
     for(size_t i = 0; i < 7; ++i){
         move.Position(homePos, i);
         move.Deactivate(i);
@@ -53,20 +58,47 @@ void Animation::Shutdown(){
 void Animation::Startup(){
     void Shutdown();
     sleep_ms(5000);
-
-    std::vector<double> startPos {120, 120, -100};
-    Move move;
     for(size_t i = 0; i < 7; ++i){
         move.Position(startPos, i);
     }
 }
 
-//walking animation consistong of arc and line
-void Animation::Walk(std::vector<double> start, std::vector<double> end){
+void Animation::Strafe(){
+    std::vector<std::vector<int>> config;
+    static Animation::Gait currentGait = Animation::tripod;
     
-}
+    switch (currentGait){
+        case tripod: {
+            config = GetLegConfig(currentGait);
 
-//rotate animation to turn the hexapod in a given direction
-void Animation::Rotate(){
-    //code
+            auto performPhase = [&](const std::vector<int>& swingGroup, const std::vector<int>& stanceGroup) {
+                for (int legNum : swingGroup) {
+                    auto end = cal.direction(move.GetLegPosition(legNum));
+                    move.Arc(end, false, legNum);
+                }
+
+                for (int legNum : stanceGroup) {
+                    move.StraightLine(startPos, legNum);
+                }
+
+                while (!move.AllLegsGrounded()) {
+                    printf("legs not on ground");
+                    sleep_ms(10);
+                }
+            };
+
+            performPhase(config[0], config[1]);
+            performPhase(config[1], config[0]);
+            break;
+        }
+        case ripple:
+            printf("RIPPLE");
+            break;
+        case wave:
+            printf("WAVE");
+            break;
+        default:
+            printf("INVALID GAIT");
+            break;
+    }
 }

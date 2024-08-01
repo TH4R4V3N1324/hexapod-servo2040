@@ -1,6 +1,8 @@
 #ifndef _ANIMATION_H_
 #define _ANIMATION_H_
 #include "Move.h"
+#include "Calculate.h"
+#include <stdio.h>
 
 class Animation{
 private:
@@ -8,6 +10,7 @@ private:
     enum Mode {normal, strafe, tilt};
     Animation::Gait currentGait;
     Animation::Mode currentMode;
+    std::vector<double> startPos {120, 120, -100};
 
 public:
     std::vector<std::vector<int>> GetLegConfig(Gait gait);
@@ -17,8 +20,7 @@ public:
     void CycleMode(Animation &animation);
     void Startup();
     void Shutdown();
-    void Walk(std::vector<double> start, std::vector<double> end);
-    void Rotate();
+    void Strafe();
 };
 
 #endif 
