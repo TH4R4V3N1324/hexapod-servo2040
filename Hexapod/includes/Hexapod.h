@@ -7,5 +7,6 @@
 #include "button.hpp"
 #include "DataPacket.h"
 #include "Move.h"
+#include "Animation.h"
 
 #endif
