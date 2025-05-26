@@ -42,9 +42,9 @@ int main() {
 
     while(!user_sw.raw()){
         sleep_ms(10);
-        
         animation.Strafe();
     }
-
+    animation.Shutdown();
+    
     return 0;
 }
