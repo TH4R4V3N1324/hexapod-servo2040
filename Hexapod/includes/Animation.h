@@ -14,9 +14,9 @@ private:
     Vector3 startPos {120, 120, -100};
     Move move;
     Calculate cal;
-    Animation() : currentGait(tripod), currentMode(normal) {}
 
 public:
+    Animation() : currentGait(tripod), currentMode(normal) {}
     std::vector<std::vector<int>> GetLegConfig(Gait gait);
     void CycleGait();
     void CycleMode();
