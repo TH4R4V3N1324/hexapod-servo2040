@@ -1,8 +1,5 @@
 #include "Animation.h"
 
-Move move;
-Calculate cal;
-
 //Returns leg configuration based on given gate
 std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
     switch (gait){
@@ -21,34 +18,19 @@ std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
     }
 }
 
-//Changes current gait to specified gait
-void Animation::SetGait(Gait gait){
-    currentGait = gait;
-}
-
-//Changes current mode to specified mode
-void Animation::SetMode(Mode mode){
-    currentMode = mode;
-}
-
 //Changes to the next gait when called
-void Animation::CycleGait(Animation &animation){
-    static Animation::Gait currentGait = Animation::tripod;
-    currentGait = static_cast<Animation::Gait>((currentGait + 1) % 3);
-    animation.SetGait(currentGait);
+void Animation::CycleGait(){
+    currentGait = static_cast<Gait>((currentGait + 1) % 3);
 }
 
 //Changes to the next mode when called
-void Animation::CycleMode(Animation &animation){
-    static Animation::Mode currentMode = Animation::normal;
-    currentMode = static_cast<Animation::Mode>((currentMode + 1) % 3);
-    animation.SetMode(currentMode);
+void Animation::CycleMode(){
+    currentMode = static_cast<Mode>((currentMode + 1) % 3);
 }
 
 //move to home, deactivate servos
 void Animation::Shutdown(){
-    std::vector<double> homePos {110, 110, 0};
-    for(size_t i = 0; i < 7; ++i){
+    for(size_t i = 1; i <= 6; ++i){
         move.Position(homePos, i);
         move.Deactivate(i);
     }
@@ -56,16 +38,15 @@ void Animation::Shutdown(){
 
 //move to home position for all legs
 void Animation::Startup(){
-    void Shutdown();
+    Shutdown();
     sleep_ms(5000);
-    for(size_t i = 0; i < 7; ++i){
+    for(size_t i = 1; i <= 6; ++i){
         move.Position(startPos, i);
     }
 }
 
 void Animation::Strafe(){
     std::vector<std::vector<int>> config;
-    static Animation::Gait currentGait = Animation::tripod;
     
     switch (currentGait){
         case tripod: {
