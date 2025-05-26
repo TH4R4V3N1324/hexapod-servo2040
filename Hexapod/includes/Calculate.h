@@ -10,6 +10,28 @@ struct LegConfig {
     bool isMirrored;
 };
 
+struct vector3 {
+    double x;
+    double y;
+    double z;
+
+    vector3 operator+(const vector3& other) const {
+        return {x + other.x, y + other.y, z + other.z};
+    }
+    vector3 operator-(const vector3& other) const {
+        return {x - other.x, y - other.y, z - other.z};
+    }
+    vector3 operator*(double scalar) const {
+        return {x * scalar, y * scalar, z * scalar};
+    }
+    vector3 operator/(double scalar) const {
+        return {x / scalar, y / scalar, z / scalar};
+    }
+    double length() const {
+        return sqrt(x * x + y * y + z * z);
+    }
+};
+
 class Calculate {
 private:
     static constexpr double coxaLength = 50.50;
