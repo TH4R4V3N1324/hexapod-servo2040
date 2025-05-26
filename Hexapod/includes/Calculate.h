@@ -3,6 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <map>
+#include <unordered_map>
 #include "DataPacket.h"
 
 struct LegConfig {
@@ -46,6 +47,8 @@ private:
     const double pi = acos(-1.0);
 
 public:
+    static std::unordered_map<int, Vector3> legPosition;
+    std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& end, bool invert, int legNum, int resolution);
     JointAngles angle(Vector3 position, int legNum);
     Vector3 direction(const Vector3& start);
     std::map<int, LegConfig> legConfigs;

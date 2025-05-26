@@ -7,7 +7,6 @@
 #include "Calculate.h"
 #include "DataPacket.h"
 #include <map>
-#include <unordered_map>
 #include <cmath>
 
 struct LegServo {
@@ -22,7 +21,6 @@ private:
     const uint END_PIN = servo::servo2040::SERVO_18;
     const uint NUM_SERVOS = (END_PIN - START_PIN) + 1;
     servo::ServoCluster cluster = servo::ServoCluster(pio0, 0, START_PIN, NUM_SERVOS);
-    static std::unordered_map<int, Vector3> legPosition;
     Analog sen_adc = Analog(servo::servo2040::SHARED_ADC);
     AnalogMux mux = AnalogMux(servo::servo2040::ADC_ADDR_0, servo::servo2040::ADC_ADDR_1, servo::servo2040::ADC_ADDR_2, PIN_UNUSED, servo::servo2040::SHARED_ADC);
 
@@ -56,7 +54,6 @@ public:
     void Coordinate(double x, double y, double z, int legNum);
     void Position(const Vector3& position, int legNum);
     void StraightLine(const Vector3& end, int legNum);
-    void Arc(const Vector3& end, bool invert, int legNum);
     void Deactivate(int legNum);
 };
 

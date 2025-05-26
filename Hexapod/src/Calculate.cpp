@@ -1,6 +1,8 @@
 #include "Calculate.h"
 using namespace std;
 
+unordered_map<int, Vector3> Calculate::legPosition;
+
 //inverse kinematics, returns the angles needed to move to position
 JointAngles Calculate::angle(Vector3 position, int legNum){
     LegConfig config = legConfigs[legNum];
@@ -53,4 +55,34 @@ Vector3 Calculate::direction(const Vector3& start){
     double endY = start.y + deltaY;
 
     return {endX, endY, start.z};
+};
+
+//Generates an arc trajectory between the start and end position of a leg
+std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& end, bool invert, int legNum, int resolution){
+    std::vector<Vector3> trajectory;
+    Vector3 start = Calculate::legPosition.at(legNum);
+    Vector3 arcCentre {
+        (start.x + end.x) / 2, 
+        (start.y + end.y) / 2, 
+        (start.z + end.z) / 2
+    };
+
+    double radius = (sqrt((pow(start.x - end.x, 2)) + (pow(start.y - end.y, 2)))) / 2;
+
+    for(size_t i = 0; i <= resolution; ++i){
+        double percentage = static_cast<double>(i) / resolution;
+        double x = start.x + (end.x - start.x) * percentage;
+        double y = start.y + (end.y - start.y) * percentage;
+        double a = sqrt((pow(arcCentre.x - x, 2)) + (pow(arcCentre.y - y, 2)));
+
+        double z;
+        if (invert == true){
+            z = arcCentre.z - ((radius - a) / 2);
+        }
+        else{
+            z = (radius - a) + arcCentre.z;
+        }    
+        trajectory.push_back({x, y, z});
+    };
+    return trajectory;
 };

@@ -2,8 +2,6 @@
 
 using namespace std;
 
-unordered_map<int, Vector3> Move::legPosition;
-
 Move::Move(){
     SetupSwitches();
 }
@@ -39,8 +37,8 @@ bool Move::AllLegsGrounded(){
 
 //returns leg position found in legPosition if it exists
 Vector3 Move::GetLegPosition(int legNum) const{
-    if (legPosition.find(legNum) != legPosition.end()) {
-        return legPosition.at(legNum);
+    if (Calculate::legPosition.find(legNum) != Calculate::legPosition.end()) {
+        return Calculate::legPosition.at(legNum);
     } else {
         return {};
     }
@@ -56,7 +54,7 @@ void Move::Coordinate(double x, double y, double z, int legNum){
     cluster.value(Servos.femur, angles.femurAngle);
     cluster.value(Servos.tibia, angles.tibiaAngle);
     
-    legPosition[legNum] = {x, y, z};
+    Calculate::legPosition[legNum] = {x, y, z};
 };
 
 //moves leg tip to position through a vector
@@ -69,12 +67,12 @@ void Move::Position(const Vector3& position, int legNum){
     cluster.value(Servos.femur, angles.femurAngle);
     cluster.value(Servos.tibia, angles.tibiaAngle);
 
-    legPosition[legNum] = position;
+    Calculate::legPosition[legNum] = position;
 };
 
 //moves leg tip in straight line from start to end
 void Move::StraightLine(const Vector3& end, int legNum){
-    Vector3 start = legPosition.at(legNum);
+    Vector3 start = Calculate::legPosition.at(legNum);
 
     int resolution = 12;
     for(size_t i = 0; i <= resolution; i++){
@@ -84,35 +82,6 @@ void Move::StraightLine(const Vector3& end, int legNum){
         double z = start.z + (end.z - start.z) * percentage;
         Position({x, y, z}, legNum);
     }
-};
-
-//moves leg tip in an arc from start to end, can invert arc direction
-void Move::Arc(const Vector3& end, bool invert, int legNum){
-    Vector3 start = legPosition.at(legNum);
-    Vector3 arcCentre {
-        (start.x + end.x) / 2, 
-        (start.y + end.y) / 2, 
-        (start.z + end.z) / 2
-    };
-
-    int resolution = 10;
-    double radius = (sqrt((pow(start.x - end.x, 2)) + (pow(start.y - end.y, 2)))) / 2;
-
-    for(size_t i = 0; i <= resolution; ++i){
-        double percentage = static_cast<double>(i) / resolution;
-        double x = start.x + (end.x - start.x) * percentage;
-        double y = start.y + (end.y - start.y) * percentage;
-        double a = sqrt((pow(arcCentre.x - x, 2)) + (pow(arcCentre.y - y, 2)));
-
-        double z;
-        if (invert == true){
-            z = arcCentre.z - ((radius - a) / 2);
-        }
-        else{
-            z = (radius - a) + arcCentre.z;
-        }    
-        Position ({x, y, z}, legNum);
-    };
 };
 
 //turns the servos off in a given leg
