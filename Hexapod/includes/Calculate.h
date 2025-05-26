@@ -32,6 +32,12 @@ struct vector3 {
     }
 };
 
+struct jointAngles {
+    double coxaAngle;
+    double femurAngle;
+    double tibiaAngle;
+};
+
 class Calculate {
 private:
     static constexpr double coxaLength = 50.50;
