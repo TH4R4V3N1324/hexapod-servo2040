@@ -1,47 +1,42 @@
 #include "Calculate.h"
 using namespace std;
 
-//inversekinematics, returns the angles needed to move to position
-vector<double> Calculate::angle(vector<double> position, int legNum){
-    double x{position[0]}, y{position[1]}, z{position[2]};
-
+//inverse kinematics, returns the angles needed to move to position
+JointAngles Calculate::angle(Vector3 position, int legNum){
     LegConfig config = legConfigs[legNum];
 
     if(config.rotationAngle != 0){
-        double xNew = x * cos(-config.rotationAngle) - y * sin(-config.rotationAngle);
-        double yNew = x * sin(-config.rotationAngle) + y * cos(-config.rotationAngle);
-        x = xNew;
-        y = yNew;
+        double xNew = position.x * cos(-config.rotationAngle) - position.y * sin(-config.rotationAngle);
+        double yNew = position.x * sin(-config.rotationAngle) + position.y * cos(-config.rotationAngle);
+        position.x = xNew;
+        position.y = yNew;
     }
 
     if(config.isMirrored){
-        y = -y;
-        x = -x;
+        position.y = -position.y;
+        position.x = -position.x;
     }
      
     double a1 = coxaLength;
     double a2 = femurLength;
     double a3 = tibiaLength;
 
-    double coxaAngle = (atan2(x, y) * (180/pi))-45;
-    double r1 = sqrt((pow(x,2) + pow(y,2))) - a1;
-    double r2 = z;
+    double coxaAngle = (atan2(position.x, position.y) * (180/pi))-45;
+    double r1 = std::hypot(position.x, position.y) - a1;
+    double r2 = position.z;
     double q2 = atan(r2/r1) * (180/pi);
-    double r3 = sqrt(pow(r1,2) + pow(r2,2));
+    double r3 = std::hypot(r1, r2);
     double q1 = acos((pow(a3,2) - pow(a2,2) - pow(r3,2)) / (-2*a2*r3)) * (180/pi);
     double femurAngle = (q2+q1);
     double q3 = acos((pow(r3,2) - pow(a2,2) - pow(a3,2)) / (-2*a2*a3)) * (180/pi);
     double tibiaAngle = 90 - q3;
 
-    vector<double> angles{coxaAngle, femurAngle, tibiaAngle};
-    return angles;
+    return {coxaAngle, femurAngle, tibiaAngle};
 };
 
 //returns the end position based on the direction of the joystick and a known distance
-vector<double> Calculate::direction(vector<double> start){
+Vector3 Calculate::direction(const Vector3& start){
     int distance = 10;
-    double startX = start[0];
-    double startY = start[1];
 
     if (std::abs(receivedData.LStickX) <= 10 && std::abs(receivedData.LStickY) <= 10) {
         return start;
@@ -54,9 +49,8 @@ vector<double> Calculate::direction(vector<double> start){
     double deltaX = distance * cos(angle);
     double deltaY = distance * sin(angle);
 
-    double endX = startX + deltaX;
-    double endY = startY + deltaY;
+    double endX = start.x + deltaX;
+    double endY = start.y + deltaY;
 
-    vector<double> end{endX, endY, start[2]};
-    return end;
+    return {endX, endY, start.z};
 };

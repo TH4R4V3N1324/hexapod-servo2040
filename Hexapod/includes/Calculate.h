@@ -10,21 +10,21 @@ struct LegConfig {
     bool isMirrored;
 };
 
-struct vector3 {
+struct Vector3 {
     double x;
     double y;
     double z;
 
-    vector3 operator+(const vector3& other) const {
+    Vector3 operator+(const Vector3& other) const {
         return {x + other.x, y + other.y, z + other.z};
     }
-    vector3 operator-(const vector3& other) const {
+    Vector3 operator-(const Vector3& other) const {
         return {x - other.x, y - other.y, z - other.z};
     }
-    vector3 operator*(double scalar) const {
+    Vector3 operator*(double scalar) const {
         return {x * scalar, y * scalar, z * scalar};
     }
-    vector3 operator/(double scalar) const {
+    Vector3 operator/(double scalar) const {
         return {x / scalar, y / scalar, z / scalar};
     }
     double length() const {
@@ -32,7 +32,7 @@ struct vector3 {
     }
 };
 
-struct jointAngles {
+struct JointAngles {
     double coxaAngle;
     double femurAngle;
     double tibiaAngle;
@@ -46,8 +46,8 @@ private:
     const double pi = acos(-1.0);
 
 public:
-    std::vector<double> angle(std::vector<double> position, int legNum);
-    std::vector<double> direction(std::vector<double> start);
+    JointAngles angle(Vector3 position, int legNum);
+    Vector3 direction(const Vector3& start);
     std::map<int, LegConfig> legConfigs;
 
     Calculate() {

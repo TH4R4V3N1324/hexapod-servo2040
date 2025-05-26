@@ -11,18 +11,24 @@
 #include <vector>
 #include <cmath>
 
+struct LegServo {
+    int coxa;
+    int femur;
+    int tibia;
+};
+
 class Move{
 private:
     const uint START_PIN = servo::servo2040::SERVO_1;
     const uint END_PIN = servo::servo2040::SERVO_18;
     const uint NUM_SERVOS = (END_PIN - START_PIN) + 1;
     servo::ServoCluster cluster = servo::ServoCluster(pio0, 0, START_PIN, NUM_SERVOS);
-    static std::unordered_map<int, std::vector<double>> legPosition;
+    static std::unordered_map<int, Vector3> legPosition;
     Analog sen_adc = Analog(servo::servo2040::SHARED_ADC);
     AnalogMux mux = AnalogMux(servo::servo2040::ADC_ADDR_0, servo::servo2040::ADC_ADDR_1, servo::servo2040::ADC_ADDR_2, PIN_UNUSED, servo::servo2040::SHARED_ADC);
 
     //assigns the relavant servos to their corrosponding leg
-    std::map<int, std::vector<int>> legs = {
+    std::map<int, LegServo> legs = {
         {1, {0, 1, 2}},
         {2, {3, 4, 5}},
         {3, {6, 7, 8}},
@@ -46,11 +52,11 @@ public:
     void SetupSwitches();
     bool GetSwitchStatus(int legNum);
     bool AllLegsGrounded();
-    std::vector<double> GetLegPosition(int legNum);
+    Vector3 GetLegPosition(int legNum);
     void Coordinate(double x, double y, double z, int legNum);
-    void Position(std::vector<double> position, int legNum);
-    void StraightLine(std::vector<double> end, int legNum);
-    void Arc(std::vector<double> end, bool invert, int legNum);
+    void Position(const Vector3& position, int legNum);
+    void StraightLine(const Vector3& end, int legNum);
+    void Arc(const Vector3& end, bool invert, int legNum);
     void Deactivate(int legNum);
 };
 

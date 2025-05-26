@@ -2,7 +2,7 @@
 
 using namespace std;
 
-unordered_map<int, vector<double>> Move::legPosition;
+unordered_map<int, Vector3> Move::legPosition;
 
 Move::Move(){
     SetupSwitches();
@@ -38,7 +38,7 @@ bool Move::AllLegsGrounded(){
 }
 
 //returns leg position found in legPosition if it exists
-std::vector<double> Move::GetLegPosition(int legNum){
+Vector3 Move::GetLegPosition(int legNum){
     if (legPosition.find(legNum) != legPosition.end()) {
         return legPosition[legNum];
     } else {
@@ -48,88 +48,86 @@ std::vector<double> Move::GetLegPosition(int legNum){
 
 //moves leg tip to position through coordinates
 void Move::Coordinate(double x, double y, double z, int legNum){
-    vector<int> legServos = legs[legNum];
+    LegServo Servos = legs[legNum];
     
     Calculate Cal;
-    vector<double>position{x,y,z};
-    vector<double>angles {Cal.angle(position, legNum)};
+    Vector3 position{x,y,z};
+    JointAngles angles = Cal.angle(position, legNum);
     
-    for(size_t i = 0; i < legServos.size() && i < angles.size(); ++i){
-        int servo = legServos[i];
-        int angle = angles[i];
-        cluster.value(servo, angle);
-    }
-
+    // Assign angles to servos directly (assuming 3 servos per leg)
+    cluster.value(Servos.coxa, angles.coxaAngle);
+    cluster.value(Servos.femur, angles.femurAngle);
+    cluster.value(Servos.tibia, angles.tibiaAngle);
+    
     legPosition[legNum] = position;
 };
 
 //moves leg tip to position through a vector
-void Move::Position(vector<double> position, int legNum){
-    vector<int> legServos = legs[legNum];
+void Move::Position(const Vector3& position, int legNum){
+    LegServo Servos = legs[legNum];
     
     Calculate Cal;
-    vector<double>angles {Cal.angle(position, legNum)};
+    JointAngles angles = Cal.angle(position, legNum);
 
-    for(size_t i = 0; i < legServos.size() && i < angles.size(); ++i){
-        int servo = legServos[i];
-        int angle = angles[i];
-        cluster.value(servo, angle);
-    }
+    // Assign angles to servos directly (assuming 3 servos per leg)
+    cluster.value(Servos.coxa, angles.coxaAngle);
+    cluster.value(Servos.femur, angles.femurAngle);
+    cluster.value(Servos.tibia, angles.tibiaAngle);
 
     legPosition[legNum] = position;
 };
 
 //moves leg tip in straight line from start to end
-void Move::StraightLine(vector<double> end, int legNum){
-    std::vector<double> start = legPosition[legNum];
+void Move::StraightLine(const Vector3& end, int legNum){
+    Vector3 start = legPosition[legNum];
 
     int resolution = 12;
-    for(size_t i = 0; i < resolution + 1; i++){
+    for(size_t i = 0; i <= resolution; i++){
         double percentage = i / resolution;
-        double x = start[0] + (end[0] - start[0]) * percentage;
-        double y = start[1] + (end[1] - start[1]) * percentage;
-        double z = start[2] + (end[2] - start[2]) * percentage;
-        vector<double> target {x, y, z};
+        double x = start.x + (end.x - start.x) * percentage;
+        double y = start.y + (end.y - start.y) * percentage;
+        double z = start.z + (end.z - start.z) * percentage;
+        Vector3 target {x, y, z};
         Position(target, legNum);
     }
 };
 
 //moves leg tip in an arc from start to end, can invert arc direction
-void Move::Arc(vector<double> end, bool invert, int legNum){
-    std::vector<double> start = legPosition[legNum];
+void Move::Arc(const Vector3& end, bool invert, int legNum){
+    Vector3 start = legPosition[legNum];
 
-    double x = (start[0] + end[0]) / 2;
-    double y = (start[1] + end[1]) / 2;
-    double z = (start[2] + end[2]) / 2;
-    vector<double> arcCentre {x, y, z};
+    double x = (start.x + end.x) / 2;
+    double y = (start.y + end.y) / 2;
+    double z = (start.z + end.z) / 2;
+    Vector3 arcCentre {x, y, z};
 
     int resolution = 10;
-    double radius = (sqrt((pow(start[0] - end[0], 2)) + (pow(start[1] - end[1], 2)))) / 2;
+    double radius = (sqrt((pow(start.x - end.x, 2)) + (pow(start.y - end.y, 2)))) / 2;
 
-    for(size_t i = 0; i < resolution + 1; ++i){
+    for(size_t i = 0; i <= resolution; ++i){
         double percentage = i / resolution;
-        double x = start[0] + (end[0] - start[0]) * percentage;
-        double y = start[1] + (end[1] - start[1]) * percentage;
-        double a = sqrt((pow(arcCentre[0] - x, 2)) + (pow(arcCentre[1] - y, 2)));
+        double x = start.x + (end.x - start.x) * percentage;
+        double y = start.y + (end.y - start.y) * percentage;
+        double a = sqrt((pow(arcCentre.x - x, 2)) + (pow(arcCentre.y - y, 2)));
 
         if (invert == true){
-            double z = arcCentre[2] - ((radius - a) / 2);
+            double z = arcCentre.z - ((radius - a) / 2);
         }
         else{
-            double z = (radius - a) + arcCentre[2];
+            double z = (radius - a) + arcCentre.z;
         }    
     };
 
-    vector<double> target {x, y, z};
+    Vector3 target {x, y, z};
     Position (target, legNum);
     sleep_ms(50);
 };
 
 //turns the servos off in a given leg
 void Move::Deactivate(int legNum){
-    vector<int> servos {legs[legNum]};
+    LegServo Servos = legs[legNum];
 
-    for(size_t i = 0; i < servos.size() + 1; ++i){
-        cluster.disable(servos[i]);
-    };
+    cluster.disable(Servos.coxa);
+    cluster.disable(Servos.femur);
+    cluster.disable(Servos.tibia);
 };
