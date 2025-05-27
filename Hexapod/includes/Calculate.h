@@ -48,7 +48,7 @@ private:
 
 public:
     static std::unordered_map<int, Vector3> legPosition;
-    std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& end, bool invert, int legNum, int resolution);
+    std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, const Vector3& end, int liftHeight, int resolution);
     JointAngles angle(Vector3 position, int legNum);
     Vector3 direction(const Vector3& start);
     std::map<int, LegConfig> legConfigs;

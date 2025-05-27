@@ -58,31 +58,17 @@ Vector3 Calculate::direction(const Vector3& start){
 };
 
 //Generates an arc trajectory between the start and end position of a leg
-std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& end, bool invert, int legNum, int resolution){
+std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, const Vector3& end, int liftHeight, int resolution){
     std::vector<Vector3> trajectory;
-    Vector3 start = Calculate::legPosition.at(legNum);
-    Vector3 arcCentre {
-        (start.x + end.x) / 2, 
-        (start.y + end.y) / 2, 
-        (start.z + end.z) / 2
-    };
 
-    double radius = (sqrt((pow(start.x - end.x, 2)) + (pow(start.y - end.y, 2)))) / 2;
-
-    for(size_t i = 0; i <= resolution; ++i){
-        double percentage = static_cast<double>(i) / resolution;
-        double x = start.x + (end.x - start.x) * percentage;
-        double y = start.y + (end.y - start.y) * percentage;
-        double a = sqrt((pow(arcCentre.x - x, 2)) + (pow(arcCentre.y - y, 2)));
-
-        double z;
-        if (invert == true){
-            z = arcCentre.z - ((radius - a) / 2);
-        }
-        else{
-            z = (radius - a) + arcCentre.z;
-        }    
+    for (int i = 0; i <= resolution; ++i) {
+        double t = static_cast<double>(i) / resolution;
+        double x = start.x + (end.x - start.x) * t;
+        double y = start.y + (end.y - start.y) * t;
+        
+        // Sine-based arc for z
+        double z = start.z + (end.z - start.z) * t + liftHeight * std::sin(M_PI * t);
         trajectory.push_back({x, y, z});
-    };
+    }
     return trajectory;
 };
