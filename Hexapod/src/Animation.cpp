@@ -47,25 +47,46 @@ void Animation::Startup(){
 
 void Animation::Strafe(){
     std::vector<std::vector<int>> config;
+    int liftHeight = 20;
+    int resolution = 15;
+    double stepTime = 0.1;
+    double maxVelocity = 20.0;
     
     switch (currentGait){
         case tripod: {
-            config = GetLegConfig(currentGait);
-
+            config = GetLegConfig(tripod);
+            
             auto performPhase = [&](const std::vector<int>& swingGroup, const std::vector<int>& stanceGroup) {
+                std::map<int, std::vector<Vector3>> swingTrajectories;
+                std::map<int, std::vector<Vector3>> stanceTrajectories;
+
                 for (int legNum : swingGroup) {
-                    auto end = cal.direction(move.GetLegPosition(legNum));
-                    move.Arc(end, false, legNum);
+                    Vector3 currentPos = move.GetLegPosition(legNum);
+                    Vector3 targetPos = cal.direction(currentPos, stepTime, maxVelocity);
+                    swingTrajectories[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution);
                 }
 
                 for (int legNum : stanceGroup) {
-                    move.StraightLine(startPos, legNum);
+                    Vector3 currentPos = move.GetLegPosition(legNum);
+                    Vector3 targetPos = cal.direction(currentPos, stepTime, maxVelocity, true);
+                    stanceTrajectories[legNum] = cal.GenerateStraightTrajectory(currentPos, targetPos, resolution);
                 }
 
+                for (int step = 0; step <= resolution; ++step) {
+                    for (int legNum : swingGroup) {
+                        move.Position(swingTrajectories[legNum][step], legNum);
+                    }
+                    for (int legNum : stanceGroup) {
+                        move.Position(stanceTrajectories[legNum][step], legNum);
+                    }
+                    sleep_ms(20);
+                }
+                
+                /*
                 while (!move.AllLegsGrounded()) {
                     printf("legs not on ground");
                     sleep_ms(10);
-                }
+               }*/ 
             };
 
             performPhase(config[0], config[1]);
