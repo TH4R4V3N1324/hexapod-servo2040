@@ -26,7 +26,7 @@ bool Move::GetSwitchStatus(int legNum){
 
 //
 bool Move::AllLegsGrounded(){
-    for (size_t i = 1; i < legSwitch.size(); ++i) {
+    for (size_t i = 1; i <= legSwitch.size(); ++i) {
         if (!Move::GetSwitchStatus(i)) {
             return false;
         }
@@ -43,19 +43,6 @@ Vector3 Move::GetLegPosition(int legNum) const{
         return {};
     }
 }
-
-//moves leg tip to position through coordinates
-void Move::Coordinate(double x, double y, double z, int legNum){
-    LegServo Servos = legs.at(legNum);
-    JointAngles angles = Cal.angle({x, y, z}, legNum);
-    
-    // Assign angles to servos directly (assuming 3 servos per leg)
-    cluster.value(Servos.coxa, angles.coxaAngle);
-    cluster.value(Servos.femur, angles.femurAngle);
-    cluster.value(Servos.tibia, angles.tibiaAngle);
-    
-    Calculate::legPosition[legNum] = {x, y, z};
-};
 
 //moves leg tip to position through a vector
 void Move::Position(const Vector3& position, int legNum){

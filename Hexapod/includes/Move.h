@@ -51,7 +51,6 @@ public:
     bool GetSwitchStatus(int legNum);
     bool AllLegsGrounded();
     Vector3 GetLegPosition(int legNum) const;
-    void Coordinate(double x, double y, double z, int legNum);
     void Position(const Vector3& position, int legNum);
     void StraightLine(const Vector3& end, int legNum);
     void Deactivate(int legNum);
