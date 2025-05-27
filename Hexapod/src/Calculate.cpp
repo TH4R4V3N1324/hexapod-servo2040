@@ -36,37 +36,46 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
     return {coxaAngle, femurAngle, tibiaAngle};
 };
 
-//returns the end position based on the direction of the joystick and a known distance
-Vector3 Calculate::direction(const Vector3& start){
-    int distance = 10;
+//Calculates end position of a leg based on the current position, velocity, and time delta
+Vector3 Calculate::direction(const Vector3& start, double velocity, double dt) {
+    const double maxStride = 20.0; // Maximum stride length
 
-    if (std::abs(receivedData.LStickX) <= 10 && std::abs(receivedData.LStickY) <= 10) {
+    double stickX = static_cast<double>(receivedData.LStickX);
+    double stickY = static_cast<double>(receivedData.LStickY);
+
+    //Check if the stick is within a dead zone
+    if (std::abs(stickX) <= 10 && std::abs(stickY) <= 10) {
         return start;
     }
 
-    double joy_x = static_cast<double>(receivedData.LStickX) / 128.0;
-    double joy_y = static_cast<double>(receivedData.LStickY) / 128.0;
+    //Calculate stick magnitude and clamp to 1.0
+    double magnitude = std::hypot(stickX, stickY) / 128.0;
+    if (magnitude > 1.0) magnitude = 1.0;
 
-    double angle = atan2(joy_y, joy_x);
-    double deltaX = distance * cos(angle);
-    double deltaY = distance * sin(angle);
+    //Dynamic stride based on velocity, dt, and stick magnitude
+    double stride = std::min(velocity * dt * magnitude, maxStride);
 
-    double endX = start.x + deltaX;
-    double endY = start.y + deltaY;
+    //Calculate direction angle
+    double angle = atan2(stickY, stickX);
 
-    return {endX, endY, start.z};
-};
+    //Compute deltas
+    double deltaX = stride * cos(angle);
+    double deltaY = stride * sin(angle);
+
+    return {start.x + deltaX, start.y + deltaY, start.z};
+}
 
 //Generates an arc trajectory between the start and end position of a leg
 std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, const Vector3& end, int liftHeight, int resolution){
     std::vector<Vector3> trajectory;
 
+    //Linear interpolation for x and y
     for (int i = 0; i <= resolution; ++i) {
         double t = static_cast<double>(i) / resolution;
         double x = start.x + (end.x - start.x) * t;
         double y = start.y + (end.y - start.y) * t;
-        
-        // Sine-based arc for z
+
+        //Sine-based arc for z
         double z = start.z + (end.z - start.z) * t + liftHeight * std::sin(M_PI * t);
         trajectory.push_back({x, y, z});
     }
