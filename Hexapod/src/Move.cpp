@@ -4,6 +4,7 @@ using namespace std;
 
 Move::Move(){
     SetupSwitches();
+    cluster.init();
 }
 
 //sets up the switches with pull down resistors if not setup already
