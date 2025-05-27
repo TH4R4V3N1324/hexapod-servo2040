@@ -37,12 +37,17 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
 };
 
 //Calculates end position of a leg based on the current position, velocity, and time between steps
-Vector3 Calculate::direction(const Vector3& start, double dt) {
+Vector3 Calculate::direction(const Vector3& start, double dt, bool invert = false) {
     const double maxStride = 20.0;
     const double maxVelocity = 50.0;
 
     double stickX = static_cast<double>(receivedData.LStickX);
     double stickY = static_cast<double>(receivedData.LStickY);
+
+    if (invert) {
+        stickX = -stickX;
+        stickY = -stickY;
+    }
 
     if (std::abs(stickX) <= 10 && std::abs(stickY) <= 10) {return start;}
    
