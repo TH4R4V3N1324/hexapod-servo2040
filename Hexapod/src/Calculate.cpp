@@ -36,29 +36,20 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
     return {coxaAngle, femurAngle, tibiaAngle};
 };
 
-//Calculates end position of a leg based on the current position, velocity, and time delta
+//Calculates end position of a leg based on the current position, velocity, and time between steps
 Vector3 Calculate::direction(const Vector3& start, double velocity, double dt) {
-    const double maxStride = 20.0; // Maximum stride length
+    const double maxStride = 20.0;
 
     double stickX = static_cast<double>(receivedData.LStickX);
     double stickY = static_cast<double>(receivedData.LStickY);
 
-    //Check if the stick is within a dead zone
-    if (std::abs(stickX) <= 10 && std::abs(stickY) <= 10) {
-        return start;
-    }
-
-    //Calculate stick magnitude and clamp to 1.0
+    if (std::abs(stickX) <= 10 && std::abs(stickY) <= 10) {return start;}
+   
     double magnitude = std::hypot(stickX, stickY) / 128.0;
     if (magnitude > 1.0) magnitude = 1.0;
 
-    //Dynamic stride based on velocity, dt, and stick magnitude
     double stride = std::min(velocity * dt * magnitude, maxStride);
-
-    //Calculate direction angle
     double angle = atan2(stickY, stickX);
-
-    //Compute deltas
     double deltaX = stride * cos(angle);
     double deltaY = stride * sin(angle);
 
