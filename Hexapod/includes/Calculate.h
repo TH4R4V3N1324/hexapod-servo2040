@@ -51,7 +51,7 @@ public:
     std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, const Vector3& end, int liftHeight, int resolution);
     std::vector<Vector3> Calculate::GenerateStraightTrajectory(const Vector3& start, const Vector3& end, int resolution);
     JointAngles angle(Vector3 position, int legNum);
-    Vector3 direction(const Vector3& start, double dt, bool invert = false);
+    Vector3 direction(const Vector3& start, double dt, double maxVelocity, bool invert = false);
     std::map<int, LegConfig> legConfigs;
 
     Calculate() {
