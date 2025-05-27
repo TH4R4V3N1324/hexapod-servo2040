@@ -52,7 +52,6 @@ public:
     bool AllLegsGrounded();
     Vector3 GetLegPosition(int legNum) const;
     void Position(const Vector3& position, int legNum);
-    void StraightLine(const Vector3& end, int legNum);
     void Deactivate(int legNum);
 };
 

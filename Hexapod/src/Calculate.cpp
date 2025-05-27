@@ -60,7 +60,7 @@ Vector3 Calculate::direction(const Vector3& start, double dt) {
     return {start.x + deltaX, start.y + deltaY, start.z};
 }
 
-//Generates an arc trajectory between the start and end position of a leg
+//Generates an arc trajectory between the start and end position
 std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, const Vector3& end, int liftHeight, int resolution){
     std::vector<Vector3> trajectory;
 
@@ -72,6 +72,20 @@ std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, cons
 
         //Sine-based arc for z
         double z = start.z + (end.z - start.z) * t + liftHeight * std::sin(M_PI * t);
+        trajectory.push_back({x, y, z});
+    }
+    return trajectory;
+};
+
+//Generates a straight trajectory between the start and end position
+std::vector<Vector3> Calculate::GenerateStraightTrajectory(const Vector3& start, const Vector3& end, int resolution){
+    std::vector<Vector3> trajectory;
+
+    for(size_t i = 0; i <= resolution; i++){
+        double percentage = static_cast<double>(i) / resolution;
+        double x = start.x + (end.x - start.x) * percentage;
+        double y = start.y + (end.y - start.y) * percentage;
+        double z = start.z + (end.z - start.z) * percentage;
         trajectory.push_back({x, y, z});
     }
     return trajectory;

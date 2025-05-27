@@ -57,20 +57,6 @@ void Move::Position(const Vector3& position, int legNum){
     Calculate::legPosition[legNum] = position;
 };
 
-//moves leg tip in straight line from start to end
-void Move::StraightLine(const Vector3& end, int legNum){
-    Vector3 start = Calculate::legPosition.at(legNum);
-
-    int resolution = 12;
-    for(size_t i = 0; i <= resolution; i++){
-        double percentage = static_cast<double>(i) / resolution;
-        double x = start.x + (end.x - start.x) * percentage;
-        double y = start.y + (end.y - start.y) * percentage;
-        double z = start.z + (end.z - start.z) * percentage;
-        Position({x, y, z}, legNum);
-    }
-};
-
 //turns the servos off in a given leg
 void Move::Deactivate(int legNum){
     LegServo Servos = legs.at(legNum);
