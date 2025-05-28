@@ -36,8 +36,8 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
 };
 
 //Calculates end position of a leg based on the current position, velocity, and time between steps
-Vector3 Calculate::direction(const Vector3& start, bool invert) {
-    const double maxStride = 100.0;
+Vector3 Calculate::direction(const Vector3& start, int legNum, bool invert) {
+    const double maxStride = 75.0;
 
     double stickX = static_cast<double>(receivedData.LStickX);
     double stickY = static_cast<double>(receivedData.LStickY);
@@ -55,10 +55,15 @@ Vector3 Calculate::direction(const Vector3& start, bool invert) {
     double stride = std::min(maxStride, maxStride * magnitude);
 
     double angle = atan2(stickY, stickX);
+
+    double rotationAngle = legConfigs[legNum].rotationAngle;
     double deltaX = stride * cos(angle);
     double deltaY = stride * sin(angle);
 
-    return {start.x + deltaX, start.y + deltaY, start.z};
+    double dx_rot = deltaX * cos(rotationAngle) - deltaY * sin(rotationAngle);
+    double dy_rot = deltaX * sin(rotationAngle) + deltaY * cos(rotationAngle);
+
+    return {start.x + dx_rot, start.y + dy_rot, start.z};
 }
 
 //Generates an arc trajectory between the start and end position

@@ -49,8 +49,6 @@ void Animation::Strafe(){
     std::vector<std::vector<int>> config;
     int liftHeight = 30;
     int resolution = 50;
-    double stepTime = 1.0;
-    double maxVelocity = 100.0;
     
     switch (currentGait){
         case tripod: {
@@ -63,13 +61,13 @@ void Animation::Strafe(){
 
                 for (int legNum : swingGroup) {
                     Vector3 currentPos = move.GetLegPosition(legNum);
-                    Vector3 targetPos = cal.direction(currentPos);
+                    Vector3 targetPos = cal.direction(currentPos, legNum);
                     gaitState.swingTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution);
                 }
 
                 for (int legNum : stanceGroup) {
                     Vector3 currentPos = move.GetLegPosition(legNum);
-                    Vector3 targetPos = cal.direction(currentPos, true);
+                    Vector3 targetPos = cal.direction(currentPos, legNum, true);
                     gaitState.stanceTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution, true);
                 }
             }
