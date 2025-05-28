@@ -47,7 +47,7 @@ void Animation::Startup(){
 
 void Animation::Strafe(){
     std::vector<std::vector<int>> config;
-    int liftHeight = 30;
+    int liftHeight = 40;
     int resolution = 50;
     
     switch (currentGait){
@@ -70,6 +70,35 @@ void Animation::Strafe(){
                     Vector3 targetPos = cal.direction(currentPos, legNum, true);
                     gaitState.stanceTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution, true);
                 }
+            }
+
+            static int idleCount = 0;
+            static const int idleThreshold = 100;
+
+            bool stickIdle = (std::abs(receivedData.LStickX) <= 10 && std::abs(receivedData.LStickY) <= 10);
+
+            if (stickIdle) {
+                idleCount++;
+            } else {
+                idleCount = 0;
+            }
+
+            if (idleCount > idleThreshold) {
+                auto swingGroup = gaitState.config[gaitState.phase];
+                auto stanceGroup = gaitState.config[1 - gaitState.phase];
+                gaitState.swingTrajectory.clear();
+                gaitState.stanceTrajectory.clear();
+
+                for (int legNum : swingGroup) {
+                    Vector3 currentPos = move.GetLegPosition(legNum);
+                    gaitState.swingTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, startPos, liftHeight, resolution);
+                }
+
+                for (int legNum : stanceGroup) {
+                    Vector3 currentPos = move.GetLegPosition(legNum);
+                    gaitState.stanceTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, startPos, liftHeight, resolution, true);
+                }
+                idleCount = 0; // Reset idle count after processing
             }
 
             for (const auto& [legNum, trajectory] : gaitState.swingTrajectory) {
