@@ -69,6 +69,16 @@ Vector3 Calculate::direction(const Vector3& start, double dt, double maxVelocity
 std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, const Vector3& end, int liftHeight, int resolution){
     std::vector<Vector3> trajectory;
 
+    // If start and end are (almost) the same, return a flat trajectory
+    if (std::abs(start.x - end.x) < 1e-6 &&
+        std::abs(start.y - end.y) < 1e-6 &&
+        std::abs(start.z - end.z) < 1e-6) {
+        for (int i = 0; i <= resolution; ++i) {
+            trajectory.push_back(start);
+        }
+        return trajectory;
+    }
+
     //Linear interpolation for x and y
     for (int i = 0; i <= resolution; ++i) {
         double t = static_cast<double>(i) / resolution;
@@ -85,6 +95,16 @@ std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, cons
 //Generates a straight trajectory between the start and end position
 std::vector<Vector3> Calculate::GenerateStraightTrajectory(const Vector3& start, const Vector3& end, int resolution){
     std::vector<Vector3> trajectory;
+
+    // If start and end are (almost) the same, return a flat trajectory
+    if (std::abs(start.x - end.x) < 1e-6 &&
+        std::abs(start.y - end.y) < 1e-6 &&
+        std::abs(start.z - end.z) < 1e-6) {
+        for (int i = 0; i <= resolution; ++i) {
+            trajectory.push_back(start);
+        }
+        return trajectory;
+    }
 
     for(size_t i = 0; i <= resolution; i++){
         double percentage = static_cast<double>(i) / resolution;
