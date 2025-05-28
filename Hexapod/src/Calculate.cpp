@@ -5,7 +5,6 @@ unordered_map<int, Vector3> Calculate::legPosition;
 
 //inverse kinematics, returns the angles needed to move to position
 JointAngles Calculate::angle(Vector3 position, int legNum){
-    /*
     LegConfig config = legConfigs[legNum];
 
     if(config.rotationAngle != 0){
@@ -16,10 +15,9 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
     }
 
     if(config.isMirrored){
-        position.y = -position.y;
-        position.x = -position.x;
+        std::swap(position.x, position.y);
     }
-    */
+
     double a1 = coxaLength;
     double a2 = femurLength;
     double a3 = tibiaLength;
