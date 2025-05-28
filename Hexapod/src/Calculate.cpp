@@ -36,7 +36,7 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
 };
 
 //Calculates end position of a leg based on the current position, velocity, and time between steps
-Vector3 Calculate::direction(const Vector3& start, double dt, double maxVelocity, bool invert) {
+Vector3 Calculate::direction(const Vector3& start, bool invert) {
     const double maxStride = 100.0;
 
     double stickX = static_cast<double>(receivedData.LStickX);
@@ -52,9 +52,7 @@ Vector3 Calculate::direction(const Vector3& start, double dt, double maxVelocity
     double magnitude = std::hypot(stickX, stickY) / 128.0;
     if (magnitude > 1.0) magnitude = 1.0;
 
-    double velocity = maxVelocity * magnitude;
-    double stride = std::min(maxStride, velocity * dt);
-    
+    double stride = std::min(maxStride, maxStride * magnitude);
 
     double angle = atan2(stickY, stickX);
     double deltaX = stride * cos(angle);
@@ -64,7 +62,7 @@ Vector3 Calculate::direction(const Vector3& start, double dt, double maxVelocity
 }
 
 //Generates an arc trajectory between the start and end position
-std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, const Vector3& end, int liftHeight, int resolution){
+std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert) {
     std::vector<Vector3> trajectory;
 
     // If start and end are (almost) the same, return a flat trajectory
@@ -84,7 +82,12 @@ std::vector<Vector3> Calculate::GenerateArcTrajectory(const Vector3& start, cons
         double y = start.y + (end.y - start.y) * t;
 
         //Sine-based arc for z
-        double z = start.z + (end.z - start.z) * t + liftHeight * std::sin(M_PI * t);
+        double z;
+        if (invert) {
+            z = start.z + (end.z - start.z) * t - liftHeight * std::sin(M_PI * t);
+        } else {
+            z = start.z + (end.z - start.z) * t + liftHeight * std::sin(M_PI * t);
+        }
         trajectory.push_back({x, y, z});
     }
     return trajectory;
