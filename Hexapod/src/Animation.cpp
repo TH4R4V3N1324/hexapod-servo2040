@@ -32,6 +32,7 @@ void Animation::CycleMode(){
 void Animation::Shutdown(){
     for(size_t i = 1; i <= 6; ++i){
         move.Position(homePos, i);
+        sleep_ms(1000);
         move.Deactivate(i);
     }
 }
@@ -39,7 +40,6 @@ void Animation::Shutdown(){
 //move to home position for all legs
 void Animation::Startup(){
     Shutdown();
-    sleep_ms(5000);
     for(size_t i = 1; i <= 6; ++i){
         move.Position(startPos, i);
     }
@@ -47,50 +47,46 @@ void Animation::Startup(){
 
 void Animation::Strafe(){
     std::vector<std::vector<int>> config;
-    int liftHeight = 20;
-    int resolution = 15;
-    double stepTime = 0.1;
-    double maxVelocity = 20.0;
+    int liftHeight = 30;
+    int resolution = 50;
+    double stepTime = 1.0;
+    double maxVelocity = 100.0;
     
     switch (currentGait){
         case tripod: {
-            config = GetLegConfig(tripod);
-            
-            auto performPhase = [&](const std::vector<int>& swingGroup, const std::vector<int>& stanceGroup) {
-                std::map<int, std::vector<Vector3>> swingTrajectories;
-                std::map<int, std::vector<Vector3>> stanceTrajectories;
+            gaitState.config = GetLegConfig(tripod);
+            if (gaitState.step == 0){
+                auto swingGroup = gaitState.config[gaitState.phase];
+                auto stanceGroup = gaitState.config[1 - gaitState.phase];
+                gaitState.swingTrajectory.clear();
+                gaitState.stanceTrajectory.clear();
 
                 for (int legNum : swingGroup) {
                     Vector3 currentPos = move.GetLegPosition(legNum);
-                    Vector3 targetPos = cal.direction(currentPos, stepTime, maxVelocity);
-                    swingTrajectories[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution);
+                    Vector3 targetPos = cal.direction(currentPos);
+                    gaitState.swingTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution);
                 }
 
                 for (int legNum : stanceGroup) {
                     Vector3 currentPos = move.GetLegPosition(legNum);
-                    Vector3 targetPos = cal.direction(currentPos, stepTime, maxVelocity, true);
-                    stanceTrajectories[legNum] = cal.GenerateStraightTrajectory(currentPos, targetPos, resolution);
+                    Vector3 targetPos = cal.direction(currentPos, true);
+                    gaitState.stanceTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution, true);
                 }
+            }
 
-                for (int step = 0; step <= resolution; ++step) {
-                    for (int legNum : swingGroup) {
-                        move.Position(swingTrajectories[legNum][step], legNum);
-                    }
-                    for (int legNum : stanceGroup) {
-                        move.Position(stanceTrajectories[legNum][step], legNum);
-                    }
-                    sleep_ms(20);
-                }
-                
-                /*
-                while (!move.AllLegsGrounded()) {
-                    printf("legs not on ground");
-                    sleep_ms(10);
-               }*/ 
-            };
+            for (const auto& [legNum, trajectory] : gaitState.swingTrajectory) {
+                move.Position(trajectory[gaitState.step], legNum);
+            }
 
-            performPhase(config[0], config[1]);
-            performPhase(config[1], config[0]);
+            for (const auto& [legNum, trajectory] : gaitState.stanceTrajectory) {
+                move.Position(trajectory[gaitState.step], legNum);
+            }
+
+            gaitState.step++;
+            if (gaitState.step > resolution) {
+                gaitState.step = 0;
+                gaitState.phase = 1 - gaitState.phase; // Switch phase
+            }
             break;
         }
         case ripple:
