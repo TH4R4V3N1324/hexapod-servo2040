@@ -5,6 +5,7 @@ unordered_map<int, Vector3> Calculate::legPosition;
 
 //inverse kinematics, returns the angles needed to move to position
 JointAngles Calculate::angle(Vector3 position, int legNum){
+    /*
     LegConfig config = legConfigs[legNum];
 
     if(config.rotationAngle != 0){
@@ -18,7 +19,7 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
         position.y = -position.y;
         position.x = -position.x;
     }
-     
+    */
     double a1 = coxaLength;
     double a2 = femurLength;
     double a3 = tibiaLength;
@@ -38,7 +39,7 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
 
 //Calculates end position of a leg based on the current position, velocity, and time between steps
 Vector3 Calculate::direction(const Vector3& start, double dt, double maxVelocity, bool invert) {
-    const double maxStride = 20.0;
+    const double maxStride = 100.0;
 
     double stickX = static_cast<double>(receivedData.LStickX);
     double stickY = static_cast<double>(receivedData.LStickY);
@@ -54,7 +55,7 @@ Vector3 Calculate::direction(const Vector3& start, double dt, double maxVelocity
     if (magnitude > 1.0) magnitude = 1.0;
 
     double velocity = maxVelocity * magnitude;
-    double stride = std::min(velocity * dt * magnitude, maxStride);
+    double stride = std::min(maxStride, velocity * dt);
     
 
     double angle = atan2(stickY, stickX);
