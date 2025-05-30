@@ -18,8 +18,8 @@ private:
     enum Mode {normal, strafe, tilt};
     Animation::Gait currentGait;
     Animation::Mode currentMode;
-    Vector3 homePos {110, 110, 0};
-    Vector3 startPos {90, 90, -100};
+    Vector3 homePos {0, 150, 0};
+    Vector3 startPos {0, 130, -120};
     Move move;
     Calculate cal;
     GaitState gaitState;
