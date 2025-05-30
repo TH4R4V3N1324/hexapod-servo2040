@@ -39,15 +39,36 @@ void Animation::Shutdown(){
 
 //move to home position for all legs
 void Animation::Startup(){
-    Shutdown();
+    static bool initialized = false;
+
+    if(!initialized){
+        Shutdown();
+        initialized = true;
+    }
+    
     for(size_t i = 1; i <= 6; ++i){
-        move.Position(startPos, i);
+        Vector3 pos = startPos;
+        if(i == 1 || i == 6){
+            double angleOffset = -15.0 * M_PI / 180.0; // -15 degrees in radians
+            double x = startPos.x * cos(angleOffset) - startPos.y * sin(angleOffset);
+            double y = startPos.x * sin(angleOffset) + startPos.y * cos(angleOffset);
+            pos.x = x;
+            pos.y = y;
+        }
+        else if(i == 3 || i == 4){
+            double angleOffset = 15.0 * M_PI / 180.0; // +15 degrees in radians
+            double x = startPos.x * cos(angleOffset) - startPos.y * sin(angleOffset);
+            double y = startPos.x * sin(angleOffset) + startPos.y * cos(angleOffset);
+            pos.x = x;
+            pos.y = y;
+        }
+        move.Position(pos, i);
     }
 }
 
 void Animation::Strafe(){
     std::vector<std::vector<int>> config;
-    int liftHeight = 40;
+    int liftHeight = 70;
     int resolution = 50;
     
     switch (currentGait){
@@ -68,7 +89,7 @@ void Animation::Strafe(){
                 for (int legNum : stanceGroup) {
                     Vector3 currentPos = move.GetLegPosition(legNum);
                     Vector3 targetPos = cal.direction(currentPos, legNum, true);
-                    gaitState.stanceTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution, true);
+                    gaitState.stanceTrajectory[legNum] = cal.GenerateStraightTrajectory(currentPos, targetPos, resolution);
                 }
             }
 
@@ -89,6 +110,8 @@ void Animation::Strafe(){
                 gaitState.swingTrajectory.clear();
                 gaitState.stanceTrajectory.clear();
 
+                Startup();
+                /*
                 for (int legNum : swingGroup) {
                     Vector3 currentPos = move.GetLegPosition(legNum);
                     gaitState.swingTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, startPos, liftHeight, resolution);
@@ -98,6 +121,7 @@ void Animation::Strafe(){
                     Vector3 currentPos = move.GetLegPosition(legNum);
                     gaitState.stanceTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, startPos, liftHeight, resolution, true);
                 }
+                */
                 idleCount = 0; // Reset idle count after processing
             }
 
