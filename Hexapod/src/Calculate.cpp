@@ -30,13 +30,19 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
 
 //Calculates end position of a leg based on the current position, velocity, and time between steps
 Vector3 Calculate::direction(const Vector3& start, int legNum, bool invert) {
-    const double maxStride = 75.0;
+    const double maxStride = 60.0;
 
     double stickX = static_cast<double>(receivedData.LStickX);
     double stickY = static_cast<double>(receivedData.LStickY);
 
+    std::swap(stickX, stickY); // Swap X and Y to match the leg's coordinate system
+
     if (invert) {
         stickX = -stickX;
+        stickY = -stickY;
+    }
+
+    if (legConfigs[legNum].isMirrored) {
         stickY = -stickY;
     }
 
