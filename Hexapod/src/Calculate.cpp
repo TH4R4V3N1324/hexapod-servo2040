@@ -7,22 +7,15 @@ unordered_map<int, Vector3> Calculate::legPosition;
 JointAngles Calculate::angle(Vector3 position, int legNum){
     LegConfig config = legConfigs[legNum];
 
-    if(config.rotationAngle != 0){
-        double xNew = position.x * cos(-config.rotationAngle) - position.y * sin(-config.rotationAngle);
-        double yNew = position.x * sin(-config.rotationAngle) + position.y * cos(-config.rotationAngle);
-        position.x = xNew;
-        position.y = yNew;
-    }
-
     if(config.isMirrored){
-        std::swap(position.x, position.y);
+        position.x = -position.x; // Mirror the x-coordinate for mirrored legs
     }
 
     double a1 = coxaLength;
     double a2 = femurLength;
     double a3 = tibiaLength;
 
-    double coxaAngle = (atan2(position.x, position.y) * (180/pi))-45;
+    double coxaAngle = (atan2(position.x, position.y) * (180/pi));
     double r1 = std::hypot(position.x, position.y) - a1;
     double r2 = position.z;
     double q2 = atan(r2/r1) * (180/pi);
@@ -37,7 +30,7 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
 
 //Calculates end position of a leg based on the current position, velocity, and time between steps
 Vector3 Calculate::direction(const Vector3& start, int legNum, bool invert) {
-    const double maxStride = 50.0;
+    const double maxStride = 75.0;
 
     double stickX = static_cast<double>(receivedData.LStickX);
     double stickY = static_cast<double>(receivedData.LStickY);
@@ -52,7 +45,7 @@ Vector3 Calculate::direction(const Vector3& start, int legNum, bool invert) {
     double magnitude = std::hypot(stickX, stickY) / 128.0;
     if (magnitude > 1.0) magnitude = 1.0;
 
-    double stride = std::min(maxStride, maxStride * magnitude);
+    double stride = maxStride * magnitude;
 
     double angle = atan2(stickY, stickX);
 
