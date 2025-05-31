@@ -14,8 +14,8 @@ struct GaitState {
 
 class Animation{
 private:
-    enum Gait {tripod, ripple, wave};
-    enum Mode {normal, strafe, tilt};
+    enum Gait {tripod, ripple, wave, NumGaits};
+    enum Mode {normal, strafe, tilt, NumModes};
     Animation::Gait currentGait;
     Animation::Mode currentMode;
     Vector3 homePos {0, 150, 0};

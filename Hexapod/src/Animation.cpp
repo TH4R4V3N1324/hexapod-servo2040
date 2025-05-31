@@ -20,12 +20,12 @@ std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
 
 //Changes to the next gait when called
 void Animation::CycleGait(){
-    currentGait = static_cast<Gait>((currentGait + 1) % 3);
+    currentGait = static_cast<Gait>((currentGait + 1) % NumGaits);
 }
 
 //Changes to the next mode when called
 void Animation::CycleMode(){
-    currentMode = static_cast<Mode>((currentMode + 1) % 3);
+    currentMode = static_cast<Mode>((currentMode + 1) % NumModes);
 }
 
 //move to home, deactivate servos
