@@ -7,10 +7,10 @@ std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
             return {{1, 3, 5}, {2, 4, 6}};
             break;
         case ripple:
-            return {{1, 6}, {3, 5}, {4, 2}};
+            return {{3, 6}, {2, 4}, {1, 5}};
             break;
         case wave:
-            return {{6}, {5}, {4}, {3}, {2}, {1}};
+            return {{3}, {2}, {1}, {4}, {5}, {6}};
             break;
         default:
             return {};
@@ -70,84 +70,81 @@ void Animation::Strafe(){
     std::vector<std::vector<int>> config;
     int liftHeight = 70;
     int resolution = 50;
-    
-    switch (currentGait){
-        case tripod: {
-            gaitState.config = GetLegConfig(tripod);
-            if (gaitState.step == 0){
-                auto swingGroup = gaitState.config[gaitState.phase];
-                auto stanceGroup = gaitState.config[1 - gaitState.phase];
-                gaitState.swingTrajectory.clear();
-                gaitState.stanceTrajectory.clear();
 
-                for (int legNum : swingGroup) {
-                    Vector3 currentPos = move.GetLegPosition(legNum);
-                    Vector3 targetPos = cal.direction(currentPos, legNum);
-                    gaitState.swingTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution);
-                }
-
-                for (int legNum : stanceGroup) {
-                    Vector3 currentPos = move.GetLegPosition(legNum);
-                    Vector3 targetPos = cal.direction(currentPos, legNum, true);
-                    gaitState.stanceTrajectory[legNum] = cal.GenerateStraightTrajectory(currentPos, targetPos, resolution);
-                }
-            }
-
-            static int idleCount = 0;
-            static const int idleThreshold = 100;
-
-            bool stickIdle = (std::abs(receivedData.LStickX) <= 10 && std::abs(receivedData.LStickY) <= 10);
-
-            if (stickIdle) {
-                idleCount++;
-            } else {
-                idleCount = 0;
-            }
-
-            if (idleCount > idleThreshold) {
-                auto swingGroup = gaitState.config[gaitState.phase];
-                auto stanceGroup = gaitState.config[1 - gaitState.phase];
-                gaitState.swingTrajectory.clear();
-                gaitState.stanceTrajectory.clear();
-
-                Startup();
-                /*
-                for (int legNum : swingGroup) {
-                    Vector3 currentPos = move.GetLegPosition(legNum);
-                    gaitState.swingTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, startPos, liftHeight, resolution);
-                }
-
-                for (int legNum : stanceGroup) {
-                    Vector3 currentPos = move.GetLegPosition(legNum);
-                    gaitState.stanceTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, startPos, liftHeight, resolution, true);
-                }
-                */
-                idleCount = 0; // Reset idle count after processing
-            }
-
-            for (const auto& [legNum, trajectory] : gaitState.swingTrajectory) {
-                move.Position(trajectory[gaitState.step], legNum);
-            }
-
-            for (const auto& [legNum, trajectory] : gaitState.stanceTrajectory) {
-                move.Position(trajectory[gaitState.step], legNum);
-            }
-
-            gaitState.step++;
-            if (gaitState.step > resolution) {
-                gaitState.step = 0;
-                gaitState.phase = 1 - gaitState.phase; // Switch phase
-            }
-            break;
-        }
-        case ripple:
-            printf("RIPPLE");
-            break;
-        case wave:
-            printf("WAVE");
-            break;
-        default:
-            printf("INVALID GAIT");
-            break;
+    if (gaitState.config.empty() || gaitState.config != GetLegConfig(currentGait)) {
+        gaitState.config = GetLegConfig(currentGait);
     }
-}
+
+    printf("Current Gait: %d, Current Mode: %d\n", currentGait, currentMode);
+
+    double configSize = gaitState.config.size();
+    double strideMultiplier = 1 / (configSize - 1);
+
+    if (gaitState.step == 0){
+    auto swingGroup = gaitState.config[gaitState.phase];
+    std::vector<int> stanceGroup;
+
+        for (int index = 0; index < gaitState.config.size(); index++){
+            if(index == gaitState.phase){continue;}
+            for(int legNum : gaitState.config[index]) {
+                stanceGroup.push_back(legNum);
+            }
+        }
+
+        gaitState.swingTrajectory.clear();
+        gaitState.stanceTrajectory.clear();
+
+        for (int legNum : swingGroup) {
+            Vector3 currentPos = move.GetLegPosition(legNum);
+            Vector3 targetPos = cal.direction(currentPos, legNum);
+            gaitState.swingTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution);
+        }
+
+        for (int legNum : stanceGroup) {
+            Vector3 currentPos = move.GetLegPosition(legNum);
+            Vector3 targetPos = cal.direction(currentPos, legNum, true, strideMultiplier);
+            gaitState.stanceTrajectory[legNum] = cal.GenerateStraightTrajectory(currentPos, targetPos, resolution);
+        }
+    }
+
+    static int idleCount = 0;
+    static const int idleThreshold = 100;
+
+    bool stickIdle = (std::abs(receivedData.LStickX) <= 10 && std::abs(receivedData.LStickY) <= 10);
+
+    if (stickIdle) {idleCount++;} else {idleCount = 0;}
+
+    if (idleCount > idleThreshold) {
+        auto swingGroup = gaitState.config[gaitState.phase];
+        std::vector<int> stanceGroup;
+
+        for (int index = 0; index < gaitState.config.size(); index++){
+            if(index == gaitState.phase){continue;}
+            for(int legNum : gaitState.config[index]) {
+                stanceGroup.push_back(legNum);
+            }
+        }
+
+        gaitState.swingTrajectory.clear();
+        gaitState.stanceTrajectory.clear();
+
+        Startup();
+
+        idleCount = 0; // Reset idle count after processing
+    }
+
+    for (const auto& [legNum, trajectory] : gaitState.swingTrajectory) {
+        move.Position(trajectory[gaitState.step], legNum);
+    }
+
+    for (const auto& [legNum, trajectory] : gaitState.stanceTrajectory) {
+        move.Position(trajectory[gaitState.step], legNum);
+    }
+
+    if (!stickIdle) {gaitState.step++;}
+    
+    if (gaitState.step > resolution) {
+        gaitState.step = 0;
+        gaitState.phase = (gaitState.phase + 1) % gaitState.config.size(); // Switch phase
+    }
+}   

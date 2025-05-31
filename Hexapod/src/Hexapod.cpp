@@ -10,7 +10,21 @@
 Button user_sw = Button(servo::servo2040::USER_SW);
 
 // Data structure to store received data from ESP32
-DataPacket receivedData;
+DataPacket receivedData = {
+    .Right = false,
+    .Left = false,
+    .Up = false,
+    .Down = false,
+    .Square = false,
+    .Cross = false,
+    .Circle = false,
+    .Triangle = false,
+    .LStickX = 0,
+    .LStickY = 0,
+    .RStickX = 0,
+    .RStickY = 0
+};
+
 
 // Requests data from ESP32 and writes data to data structure
 void ReadInputData(){
@@ -21,6 +35,15 @@ void ReadInputData(){
     if (bytesRead != sizeof(receivedData)) {
         printf("Failed to read data from ESP32. Bytes read: %d\n", bytesRead);
     }
+}
+
+bool isJustPressed(const std::string& buttonName, bool currentState) {
+    static std::map<std::string, bool> previousStates;
+
+    bool justPressed = currentState && !previousStates[buttonName];
+    previousStates[buttonName] = currentState;
+
+    return justPressed;
 }
 
 int main() {
@@ -42,14 +65,9 @@ int main() {
 
     while (1) {
         ReadInputData();
-        // Safely read shared data
-        int lx = receivedData.LStickX;
-        int ly = receivedData.LStickY;
-        //receivedData.LStickX = 0; // Reset to avoid repeated processing
-        //receivedData.LStickY = 128; // Reset to avoid repeated processing
-
-        printf("LStickX: %d, LStickY: %d\n", lx, ly);
-        // ...robot logic...
+        
+        if (isJustPressed("Triangle", receivedData.Triangle)) {animation.CycleGait();}
+        
         animation.Strafe();
         
         sleep_ms(1);

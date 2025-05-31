@@ -23,6 +23,7 @@ private:
     Move move;
     Calculate cal;
     GaitState gaitState;
+    bool firstStepAfterRest = true;
 
 public:
     Animation() : currentGait(tripod), currentMode(normal) {}
