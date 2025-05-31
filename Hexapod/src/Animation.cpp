@@ -66,9 +66,23 @@ void Animation::Startup(){
     }
 }
 
+bool SignificantStickChange(const int& stickX, const int& stickY) {
+    static int lastX = 0;
+    static int lastY = 0;
+
+    // Check if the change in stick position is significant
+    bool significantChange = (std::abs(stickX - lastX) > 10 || std::abs(stickY - lastY) > 10);
+
+    // Update the last known positions
+    lastX = stickX;
+    lastY = stickY;
+
+    return significantChange;
+}
+
 void Animation::Strafe(){
     std::vector<std::vector<int>> config;
-    int liftHeight = 70;
+    int liftHeight = 50;
     int resolution = 50;
 
     if (gaitState.config.empty() || gaitState.config != GetLegConfig(currentGait)) {
