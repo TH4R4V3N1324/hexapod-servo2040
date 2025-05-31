@@ -8,6 +8,7 @@
 #include "DataPacket.h"
 #include <map>
 #include <cmath>
+#include <iostream>
 
 struct LegServo {
     int coxa;
@@ -23,6 +24,7 @@ private:
     servo::ServoCluster cluster = servo::ServoCluster(pio0, 0, START_PIN, NUM_SERVOS);
     Analog sen_adc = Analog(servo::servo2040::SHARED_ADC);
     AnalogMux mux = AnalogMux(servo::servo2040::ADC_ADDR_0, servo::servo2040::ADC_ADDR_1, servo::servo2040::ADC_ADDR_2, PIN_UNUSED, servo::servo2040::SHARED_ADC);
+    Analog cur_adc = Analog(servo::servo2040::SHARED_ADC, servo::servo2040::CURRENT_GAIN, servo::servo2040::SHUNT_RESISTOR, servo::servo2040::CURRENT_OFFSET);
 
     //assigns the relavant servos to their corrosponding leg
     std::map<int, LegServo> legs = {
@@ -53,6 +55,7 @@ public:
     Vector3 GetLegPosition(int legNum) const;
     void Position(const Vector3& position, int legNum);
     void Deactivate(int legNum);
+    float GetCurrentDraw();
 };
 
 #endif 

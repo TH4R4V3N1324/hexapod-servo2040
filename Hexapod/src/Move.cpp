@@ -7,6 +7,12 @@ Move::Move(){
     cluster.init();
 }
 
+float Move::GetCurrentDraw() {
+    mux.select(servo::servo2040::CURRENT_SENSE_ADDR);
+    float current = cur_adc.read_current();
+    return current;
+}
+
 //sets up the switches with pull down resistors if not setup already
 void Move::SetupSwitches(){
     static bool initialized = false;
