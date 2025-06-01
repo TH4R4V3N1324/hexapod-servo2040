@@ -10,6 +10,7 @@ struct GaitState {
     std::map<int, std::vector<Vector3>> stanceTrajectory;
     int phase = 0;
     int step = 0;
+    bool idleReturning = false;
 };
 
 class Animation{
@@ -33,6 +34,7 @@ public:
     void Startup();
     void Shutdown();
     void Strafe();
+    void returnToStart();
 };
 
 #endif 
