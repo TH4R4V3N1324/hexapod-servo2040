@@ -82,16 +82,20 @@ bool SignificantStickChange(const int& stickX, const int& stickY) {
 
 void Animation::returnToStart(){
     static int counter = 0;
+    static bool trajectoryGenerated = false;
+
     std::vector<std::vector<int>> config;
-    gaitState.config = GetLegConfig(tripod);
     int liftHeight = 50;
     int resolution = 50;
 
     auto swingGroup = gaitState.config[gaitState.phase];
     std::vector<int> stanceGroup;
-    if (gaitState.step == 0){
+    if (gaitState.step == 0 && !trajectoryGenerated) {
+        gaitState.config = GetLegConfig(tripod);
+
         gaitState.swingTrajectory.clear();
         gaitState.stanceTrajectory.clear();
+
         for (int index = 0; index < gaitState.config.size(); index++){
             if(index == gaitState.phase){continue;}
             for(int legNum : gaitState.config[index]) {
@@ -136,14 +140,16 @@ void Animation::returnToStart(){
         }
     }
 
-    counter++;
     gaitState.step ++;
     if (gaitState.step > resolution) {
+        counter++;
         gaitState.step = 0;
         gaitState.phase = (gaitState.phase + 1) % gaitState.config.size(); // Switch phase
 
         if (counter > gaitState.config.size()){
         gaitState.idleReturning = false;
+        counter = 0;
+        trajectoryGenerated = false;
         }
     }
     
