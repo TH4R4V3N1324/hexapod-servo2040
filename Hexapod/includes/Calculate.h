@@ -4,6 +4,7 @@
 #include <cmath>
 #include <map>
 #include <unordered_map>
+#include <iostream>
 #include "DataPacket.h"
 
 struct LegConfig {
@@ -48,8 +49,8 @@ private:
 
 public:
     static std::unordered_map<int, Vector3> legPosition;
-    std::vector<Vector3> GenerateArcTrajectory(const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
-    std::vector<Vector3> GenerateStraightTrajectory(const Vector3& start, const Vector3& end, int resolution);
+    void GenerateArcTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
+    void GenerateStraightTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int resolution);
     JointAngles angle(Vector3 position, int legNum);
     Vector3 direction(const Vector3& start, int legNum, bool invert = false, double strideMultiplier = 1.0);
     std::map<int, LegConfig> legConfigs;
