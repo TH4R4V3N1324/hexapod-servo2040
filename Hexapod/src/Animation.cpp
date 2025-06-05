@@ -88,6 +88,13 @@ void Animation::returnToStart(){
     int liftHeight = 50;
     int resolution = 50;
 
+    if (gaitState.phase >= gaitState.config.size()) {
+        std::cerr << "Invalid gaitState.phase: " << gaitState.phase 
+              << ", config size: " << gaitState.config.size() << std::endl;
+        gaitState.phase = 0;
+    return;
+}
+    
     auto swingGroup = gaitState.config[gaitState.phase];
     std::vector<int> stanceGroup;
     if (gaitState.step == 0 && !trajectoryGenerated) {
@@ -119,7 +126,7 @@ void Animation::returnToStart(){
                 pos.x = x;
                 pos.y = y;
             }
-            gaitState.swingTrajectory[legNum] = cal.GenerateArcTrajectory(move.GetLegPosition(legNum), pos, liftHeight, resolution);
+            cal.GenerateArcTrajectory(gaitState.swingTrajectory[legNum], move.GetLegPosition(legNum), pos, liftHeight, resolution);
         }
 
         for (int legNum : stanceGroup) {
@@ -165,7 +172,7 @@ void Animation::Strafe(){
     
     if (idleCount > idleThreshold || gaitState.idleReturning) {
         if (!gaitState.idleReturning) {gaitState.idleReturning = true;}
-        if (idleCount > idleThreshold) {gaitState.step = 0;}
+        if (idleCount > idleThreshold) {gaitState.step = 0; gaitState.phase = 0;}
 
         returnToStart();
 
@@ -204,13 +211,13 @@ void Animation::Strafe(){
         for (int legNum : swingGroup) {
             Vector3 currentPos = move.GetLegPosition(legNum);
             Vector3 targetPos = cal.direction(currentPos, legNum);
-            gaitState.swingTrajectory[legNum] = cal.GenerateArcTrajectory(currentPos, targetPos, liftHeight, resolution);
+            cal.GenerateArcTrajectory(gaitState.swingTrajectory[legNum], currentPos, targetPos, liftHeight, resolution);
         }
 
         for (int legNum : stanceGroup) {
             Vector3 currentPos = move.GetLegPosition(legNum);
             Vector3 targetPos = cal.direction(currentPos, legNum, true, strideMultiplier);
-            gaitState.stanceTrajectory[legNum] = cal.GenerateStraightTrajectory(currentPos, targetPos, resolution);
+            cal.GenerateStraightTrajectory(gaitState.stanceTrajectory[legNum], currentPos, targetPos, resolution);
         }
     }
 
