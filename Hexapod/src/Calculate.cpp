@@ -125,3 +125,45 @@ void Calculate::GenerateStraightTrajectory(std::vector<Vector3>& trajectory, con
         });
     }
 }
+
+void Calculate::GenerateBezierTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert) {
+    trajectory.clear();
+    trajectory.reserve(resolution + 1);
+
+    if (resolution <= 0 || resolution > 10000) {
+        std::cerr << "Invalid resolution: " << resolution << std::endl;
+        std::terminate();
+    }
+
+    Vector3 dir = end - start;
+    if (dir.length() == 0.0) {
+        // Stationary case: generate flat path
+        trajectory.assign(resolution + 1, start);
+        return;
+    }
+
+    Vector3 dirNorm = dir.normalized();
+    double offsetScale = dir.length() * 0.25; // tweak as needed
+
+    // Place control points before start and after end along the movement direction
+    Vector3 P0 = start;
+    Vector3 P3 = end;
+    Vector3 P1 = start - dirNorm * offsetScale;
+    Vector3 P2 = end + dirNorm * offsetScale;
+
+    P1.z = start.z + liftHeight;
+    P2.z = end.z + liftHeight;
+
+    for (int i = 0; i <= resolution; ++i) {
+        double t = static_cast<double>(i) / resolution;
+        double u = 1.0 - t;
+
+        Vector3 point =
+            P0 * (u * u * u) +
+            P1 * (3 * u * u * t) +
+            P2 * (3 * u * t * t) +
+            P3 * (t * t * t);
+
+        trajectory.push_back(point);
+    }
+}

@@ -126,7 +126,7 @@ void Animation::returnToStart(){
                 pos.x = x;
                 pos.y = y;
             }
-            cal.GenerateArcTrajectory(gaitState.swingTrajectory[legNum], move.GetLegPosition(legNum), pos, liftHeight, resolution);
+            cal.GenerateBezierTrajectory(gaitState.swingTrajectory[legNum], move.GetLegPosition(legNum), pos, liftHeight, resolution);
         }
 
         for (int legNum : stanceGroup) {
@@ -211,7 +211,7 @@ void Animation::Strafe(){
         for (int legNum : swingGroup) {
             Vector3 currentPos = move.GetLegPosition(legNum);
             Vector3 targetPos = cal.direction(currentPos, legNum);
-            cal.GenerateArcTrajectory(gaitState.swingTrajectory[legNum], currentPos, targetPos, liftHeight, resolution);
+            cal.GenerateBezierTrajectory(gaitState.swingTrajectory[legNum], currentPos, targetPos, liftHeight, resolution);
         }
 
         for (int legNum : stanceGroup) {

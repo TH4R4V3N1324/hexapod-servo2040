@@ -17,6 +17,9 @@ struct Vector3 {
     double y;
     double z;
 
+    Vector3(double x_ = 0, double y_ = 0, double z_ = 0)
+        : x(x_), y(y_), z(z_) {}
+
     Vector3 operator+(const Vector3& other) const {
         return {x + other.x, y + other.y, z + other.z};
     }
@@ -31,6 +34,11 @@ struct Vector3 {
     }
     double length() const {
         return sqrt(x * x + y * y + z * z);
+    }
+    Vector3 normalized() const {
+        double len = length();
+        if (len < 1e-8) return {0, 0, 0};
+        return *this / len;
     }
 };
 
@@ -51,6 +59,7 @@ public:
     static std::unordered_map<int, Vector3> legPosition;
     void GenerateArcTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
     void GenerateStraightTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int resolution);
+    void GenerateBezierTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
     JointAngles angle(Vector3 position, int legNum);
     Vector3 direction(const Vector3& start, int legNum, bool invert = false, double strideMultiplier = 1.0);
     std::map<int, LegConfig> legConfigs;
