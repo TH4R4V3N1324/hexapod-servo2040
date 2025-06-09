@@ -47,22 +47,7 @@ void Animation::Startup(){
     }
     
     for(size_t i = 1; i <= 6; ++i){
-        Vector3 pos = startPos;
-        if(i == 1 || i == 6){
-            double angleOffset = -15.0 * M_PI / 180.0; // -15 degrees in radians
-            double x = startPos.x * cos(angleOffset) - startPos.y * sin(angleOffset);
-            double y = startPos.x * sin(angleOffset) + startPos.y * cos(angleOffset);
-            pos.x = x;
-            pos.y = y;
-        }
-        else if(i == 3 || i == 4){
-            double angleOffset = 15.0 * M_PI / 180.0; // +15 degrees in radians
-            double x = startPos.x * cos(angleOffset) - startPos.y * sin(angleOffset);
-            double y = startPos.x * sin(angleOffset) + startPos.y * cos(angleOffset);
-            pos.x = x;
-            pos.y = y;
-        }
-        move.Position(pos, i);
+        move.Position(startPosition.at(i), i);
     }
 }
 
@@ -113,22 +98,8 @@ void Animation::returnToStart(){
         }
 
         for (int legNum : swingGroup){
-            Vector3 pos = startPos;
-            if(legNum == 1 || legNum == 6){
-                double angleOffset = -15.0 * M_PI / 180.0; // -15 degrees in radians
-                double x = startPos.x * cos(angleOffset) - startPos.y * sin(angleOffset);
-                double y = startPos.x * sin(angleOffset) + startPos.y * cos(angleOffset);
-                pos.x = x;
-                pos.y = y;
-            }
-            else if(legNum == 3 || legNum == 4){
-                double angleOffset = 15.0 * M_PI / 180.0; // +15 degrees in radians
-                double x = startPos.x * cos(angleOffset) - startPos.y * sin(angleOffset);
-                double y = startPos.x * sin(angleOffset) + startPos.y * cos(angleOffset);
-                pos.x = x;
-                pos.y = y;
-            }
-            cal.GenerateBezierTrajectory(gaitState.swingTrajectory[legNum], move.GetLegPosition(legNum), pos, liftHeight, resolution);
+            Vector3 currentPos = move.GetLegPosition(legNum);
+            cal.GenerateBezierTrajectory(gaitState.swingTrajectory[legNum], currentPos, startPosition.at(legNum), liftHeight, resolution);
         }
 
         for (int legNum : stanceGroup) {

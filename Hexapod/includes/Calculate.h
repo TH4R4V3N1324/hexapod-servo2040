@@ -40,6 +40,16 @@ struct Vector3 {
         if (len < 1e-8) return {0, 0, 0};
         return *this / len;
     }
+    Vector3 rotate(double angleDeg) const {
+        double angleRad = angleDeg * M_PI / 180;
+        double cosA = cos(angleRad);
+        double sinA = sin(angleRad);
+        return {
+            x * cosA - y * sinA,
+            x * sinA + y * cosA,
+            z
+        };
+    }
 };
 
 struct JointAngles {

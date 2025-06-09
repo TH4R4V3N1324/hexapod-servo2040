@@ -21,6 +21,14 @@ private:
     Animation::Mode currentMode;
     Vector3 homePos {0, 150, 0};
     Vector3 startPos {0, 130, -120};
+    std::map<int, Vector3> startPosition{
+        {1, startPos.rotate(-15)},
+        {2, startPos},
+        {3, startPos.rotate(15)},
+        {4, startPos.rotate(15)},
+        {5, startPos},
+        {6, startPos.rotate(-15)}
+    };
     Move move;
     Calculate cal;
     GaitState gaitState;
