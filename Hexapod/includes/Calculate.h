@@ -1,5 +1,5 @@
-#ifndef _INVERSEKINEMATICS_H_
-#define _INVERSEKINEMATICS_H_
+#ifndef _CALCULATE_H_
+#define _CALCULATE_H_
 #include <vector>
 #include <cmath>
 #include <map>
