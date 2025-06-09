@@ -3,12 +3,11 @@
 #include "Move.h"
 #include "Calculate.h"
 #include <stdio.h>
-#include <array>
 
 struct GaitState {
     std::vector<std::vector<int>> config;
-    std::array<std::vector<Vector3>, 6> swingTrajectory;
-    std::array<std::vector<Vector3>, 6> stanceTrajectory;
+    std::map<int, std::vector<Vector3>> swingTrajectory;
+    std::map<int, std::vector<Vector3>> stanceTrajectory;
     int phase = 0;
     int step = 0;
     bool idleReturning = false;
