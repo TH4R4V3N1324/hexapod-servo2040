@@ -89,17 +89,19 @@ void Animation::returnToStart(){
     int resolution = 50;
 
     if (gaitState.phase >= gaitState.config.size()) {
-        std::cerr << "Invalid gaitState.phase: " << gaitState.phase 
-              << ", config size: " << gaitState.config.size() << std::endl;
-        gaitState.phase = 0;
-    return;
-}
+        std::cerr << "[returnToStart] ERROR: Invalid gaitState.phase: " 
+                << gaitState.phase << ", config size: " 
+                << gaitState.config.size() << std::endl;
+        gaitState.idleReturning = false;
+        counter = 0;
+        gaitState.step = 0;
+        trajectoryGenerated = false;
+        return;
+    }
     
     auto swingGroup = gaitState.config[gaitState.phase];
     std::vector<int> stanceGroup;
     if (gaitState.step == 0 && !trajectoryGenerated) {
-        gaitState.config = GetLegConfig(tripod);
-
         gaitState.swingTrajectory.clear();
         gaitState.stanceTrajectory.clear();
 
@@ -154,9 +156,11 @@ void Animation::returnToStart(){
         gaitState.phase = (gaitState.phase + 1) % gaitState.config.size(); // Switch phase
 
         if (counter > gaitState.config.size()){
-        gaitState.idleReturning = false;
-        counter = 0;
-        trajectoryGenerated = false;
+            counter = 0;
+            gaitState.idleReturning = false;
+            trajectoryGenerated = false;
+            gaitState.swingTrajectory.clear();
+            gaitState.stanceTrajectory.clear();
         }
     }
     
@@ -171,13 +175,13 @@ void Animation::Strafe(){
     if (stickIdle) {idleCount++;} else {idleCount = 0;}
     
     if (idleCount > idleThreshold || gaitState.idleReturning) {
-        if (!gaitState.idleReturning) {gaitState.idleReturning = true;}
-        if (idleCount > idleThreshold) {gaitState.step = 0; gaitState.phase = 0;}
+        if (!gaitState.idleReturning) {
+            gaitState.idleReturning = true;
+            gaitState.step = 0;
+        }
 
         returnToStart();
-
-        idleCount = 0; // Reset idle count after processing
-
+        idleCount = 0;
         return;
     }
     
