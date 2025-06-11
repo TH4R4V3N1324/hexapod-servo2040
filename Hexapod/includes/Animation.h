@@ -3,11 +3,17 @@
 #include "Move.h"
 #include "Calculate.h"
 #include <stdio.h>
+#include <array>
+
+static constexpr int MAX_LEGS = 6;
+static constexpr int MAX_RESOLUTION = 50 + 1; // +1 for inclusive endpoint
 
 struct GaitState {
     std::vector<std::vector<int>> config;
-    std::map<int, std::vector<Vector3>> swingTrajectory;
-    std::map<int, std::vector<Vector3>> stanceTrajectory;
+    std::array<std::array<Vector3, MAX_RESOLUTION>, MAX_LEGS + 1> swingTrajectory;  // 1-based indexing
+    std::array<std::array<Vector3, MAX_RESOLUTION>, MAX_LEGS + 1> stanceTrajectory;
+    std::array<int, MAX_LEGS + 1> swingSizes{};   // Store actual size for each leg
+    std::array<int, MAX_LEGS + 1> stanceSizes{};
     int phase = 0;
     int step = 0;
     bool idleReturning = false;

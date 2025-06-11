@@ -66,10 +66,8 @@ Vector3 Calculate::direction(const Vector3& start, int legNum, bool invert, doub
 }
 
 //Generates an arc trajectory between the start and end position
-void Calculate::GenerateArcTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert) {
-    trajectory.clear();
-    trajectory.reserve(resolution + 1);
-
+void Calculate::GenerateArcTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert) {
+    outSize = 0;
     if (resolution <= 0 || resolution > 10000) {
         std::cerr << "Invalid resolution: " << resolution << std::endl;
         std::terminate();
@@ -80,27 +78,27 @@ void Calculate::GenerateArcTrajectory(std::vector<Vector3>& trajectory, const Ve
         std::abs(start.y - end.y) < 1e-6 &&
         std::abs(start.z - end.z) < 1e-6) {
         for (int i = 0; i <= resolution; ++i) {
-            trajectory.push_back(start);
+            trajectory[i] = start;
         }
+        outSize = resolution + 1;
         return;
     }
 
     //Linear interpolation for x and y
     for (int i = 0; i <= resolution; ++i) {
         double t = static_cast<double>(i) / resolution;
-        trajectory.push_back({
+        trajectory[i] = {
             start.x + (end.x - start.x) * t,
             start.y + (end.y - start.y) * t,
             start.z + (end.z - start.z) * t + (invert ? -1 : 1) * liftHeight * std::sin(M_PI * t)
-        });
+        };
     }
+    outSize = resolution + 1;
 }
 
 //Generates a straight trajectory between the start and end position
-void Calculate::GenerateStraightTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int resolution){
-    trajectory.clear();
-    trajectory.reserve(resolution + 1);
-
+void Calculate::GenerateStraightTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int resolution) {
+    outSize = 0;
     if (resolution <= 0 || resolution > 10000) {
         std::cerr << "Invalid resolution: " << resolution << std::endl;
         std::terminate();
@@ -111,25 +109,25 @@ void Calculate::GenerateStraightTrajectory(std::vector<Vector3>& trajectory, con
         std::abs(start.y - end.y) < 1e-6 &&
         std::abs(start.z - end.z) < 1e-6) {
         for (int i = 0; i <= resolution; ++i) {
-            trajectory.push_back(start);
+            trajectory[i] = start;
         }
+        outSize = resolution + 1;
         return;
     }
 
-    for(size_t i = 0; i <= resolution; i++){
+    for (int i = 0; i <= resolution; i++) {
         double t = static_cast<double>(i) / resolution;
-        trajectory.push_back({
+        trajectory[i] = {
             start.x + (end.x - start.x) * t,
             start.y + (end.y - start.y) * t,
             start.z + (end.z - start.z) * t
-        });
+        };
     }
+    outSize = resolution + 1;
 }
 
-void Calculate::GenerateBezierTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert) {
-    trajectory.clear();
-    trajectory.reserve(resolution + 1);
-
+void Calculate::GenerateBezierTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert) {
+    outSize = 0;
     if (resolution <= 0 || resolution > 10000) {
         std::cerr << "Invalid resolution: " << resolution << std::endl;
         std::terminate();
@@ -138,7 +136,10 @@ void Calculate::GenerateBezierTrajectory(std::vector<Vector3>& trajectory, const
     Vector3 dir = end - start;
     if (dir.length() == 0.0) {
         // Stationary case: generate flat path
-        trajectory.assign(resolution + 1, start);
+        for (int i = 0; i <= resolution; ++i) {
+            trajectory[i] = start;
+        }
+        outSize = resolution + 1;
         return;
     }
 
@@ -164,6 +165,7 @@ void Calculate::GenerateBezierTrajectory(std::vector<Vector3>& trajectory, const
             P2 * (3 * u * t * t) +
             P3 * (t * t * t);
 
-        trajectory.push_back(point);
+        trajectory[i] = point;
     }
+    outSize = resolution + 1;
 }

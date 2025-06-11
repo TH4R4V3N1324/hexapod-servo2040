@@ -67,9 +67,9 @@ private:
 
 public:
     static std::unordered_map<int, Vector3> legPosition;
-    void GenerateArcTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
-    void GenerateStraightTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int resolution);
-    void GenerateBezierTrajectory(std::vector<Vector3>& trajectory, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
+    void GenerateArcTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
+    void GenerateStraightTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int resolution);
+    void GenerateBezierTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
     JointAngles angle(Vector3 position, int legNum);
     Vector3 direction(const Vector3& start, int legNum, bool invert = false, double strideMultiplier = 1.0);
     std::map<int, LegConfig> legConfigs;

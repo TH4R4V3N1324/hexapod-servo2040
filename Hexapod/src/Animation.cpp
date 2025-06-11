@@ -65,86 +65,92 @@ bool SignificantStickChange(const int& stickX, const int& stickY) {
     return significantChange;
 }
 
-void Animation::returnToStart(){
+void Animation::returnToStart() {
     static int counter = 0;
     static bool trajectoryGenerated = false;
 
-    std::vector<std::vector<int>> config;
     int liftHeight = 50;
     int resolution = 50;
 
     if (gaitState.phase >= gaitState.config.size()) {
-        std::cerr << "[returnToStart] ERROR: Invalid gaitState.phase: " 
-                << gaitState.phase << ", config size: " 
-                << gaitState.config.size() << std::endl;
+        std::cerr << "[returnToStart] ERROR: Invalid gaitState.phase: "
+                  << gaitState.phase << ", config size: "
+                  << gaitState.config.size() << std::endl;
         gaitState.idleReturning = false;
         counter = 0;
         gaitState.step = 0;
         trajectoryGenerated = false;
         return;
     }
-    
+
     auto swingGroup = gaitState.config[gaitState.phase];
     std::vector<int> stanceGroup;
     if (gaitState.step == 0 && !trajectoryGenerated) {
-        gaitState.swingTrajectory.clear();
-        gaitState.stanceTrajectory.clear();
+        // Clear sizes for all legs
+        for (int i = 1; i <= MAX_LEGS; ++i) {
+            gaitState.swingSizes[i] = 0;
+            gaitState.stanceSizes[i] = 0;
+        }
 
-        for (int index = 0; index < gaitState.config.size(); index++){
-            if(index == gaitState.phase){continue;}
-            for(int legNum : gaitState.config[index]) {
+        for (int index = 0; index < gaitState.config.size(); index++) {
+            if (index == gaitState.phase) continue;
+            for (int legNum : gaitState.config[index]) {
                 stanceGroup.push_back(legNum);
             }
         }
 
-        for (int legNum : swingGroup){
+        for (int legNum : swingGroup) {
             Vector3 currentPos = move.GetLegPosition(legNum);
-            cal.GenerateBezierTrajectory(gaitState.swingTrajectory[legNum], currentPos, startPosition.at(legNum), liftHeight, resolution);
+            int size = 0;
+            cal.GenerateBezierTrajectory(gaitState.swingTrajectory[legNum].data(), size, currentPos, startPosition.at(legNum), liftHeight, resolution);
+            gaitState.swingSizes[legNum] = size;
         }
 
         for (int legNum : stanceGroup) {
             Vector3 currentPos = move.GetLegPosition(legNum);
-            gaitState.stanceTrajectory[legNum].resize(resolution + 1, currentPos); //= std::vector<Vector3>(resolution + 1, currentPos);
+            for (int i = 0; i <= resolution; ++i) {
+                gaitState.stanceTrajectory[legNum][i] = currentPos;
+            }
+            gaitState.stanceSizes[legNum] = resolution + 1;
         }
     }
 
-    for (const auto& [legNum, trajectory] : gaitState.swingTrajectory) {
-        if (gaitState.step < trajectory.size()) {
-            move.Position(trajectory[gaitState.step], legNum);
+    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
+        int size = gaitState.swingSizes[legNum];
+        if (gaitState.step < size) {
+            move.Position(gaitState.swingTrajectory[legNum][gaitState.step], legNum);
         }
     }
 
-    for (const auto& [legNum, trajectory] : gaitState.stanceTrajectory) {
-        if (gaitState.step < trajectory.size()) {
-            move.Position(trajectory[gaitState.step], legNum);
+    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
+        int size = gaitState.stanceSizes[legNum];
+        if (gaitState.step < size) {
+            move.Position(gaitState.stanceTrajectory[legNum][gaitState.step], legNum);
         }
     }
 
-    gaitState.step ++;
+    gaitState.step++;
     if (gaitState.step > resolution) {
         counter++;
         gaitState.step = 0;
         gaitState.phase = (gaitState.phase + 1) % gaitState.config.size(); // Switch phase
 
-        if (counter > gaitState.config.size()){
+        if (counter > gaitState.config.size()) {
             counter = 0;
             gaitState.idleReturning = false;
             trajectoryGenerated = false;
-            gaitState.swingTrajectory.clear();
-            gaitState.stanceTrajectory.clear();
         }
     }
-    
 }
 
-void Animation::Strafe(){
+void Animation::Strafe() {
     static int idleCount = 0;
     static const int idleThreshold = 100;
 
     bool stickIdle = (std::abs(receivedData.LStickX) <= 10 && std::abs(receivedData.LStickY) <= 10);
 
-    if (stickIdle) {idleCount++;} else {idleCount = 0;}
-    
+    if (stickIdle) { idleCount++; } else { idleCount = 0; }
+
     if (idleCount > idleThreshold || gaitState.idleReturning) {
         if (!gaitState.idleReturning) {
             gaitState.idleReturning = true;
@@ -155,8 +161,7 @@ void Animation::Strafe(){
         idleCount = 0;
         return;
     }
-    
-    std::vector<std::vector<int>> config;
+
     int liftHeight = 50;
     int resolution = 50;
 
@@ -164,51 +169,58 @@ void Animation::Strafe(){
         gaitState.config = GetLegConfig(currentGait);
     }
 
-    printf("Current Gait: %d, Current Mode: %d\n", currentGait, currentMode);
-
     double configSize = gaitState.config.size();
     double strideMultiplier = 1 / (configSize - 1);
 
-    if (gaitState.step == 0){
-    auto swingGroup = gaitState.config[gaitState.phase];
-    std::vector<int> stanceGroup;
+    if (gaitState.step == 0) {
+        auto swingGroup = gaitState.config[gaitState.phase];
+        std::vector<int> stanceGroup;
 
-        for (int index = 0; index < gaitState.config.size(); index++){
-            if(index == gaitState.phase){continue;}
-            for(int legNum : gaitState.config[index]) {
+        // Clear sizes for all legs
+        for (int i = 1; i <= MAX_LEGS; ++i) {
+            gaitState.swingSizes[i] = 0;
+            gaitState.stanceSizes[i] = 0;
+        }
+
+        for (int index = 0; index < gaitState.config.size(); index++) {
+            if (index == gaitState.phase) continue;
+            for (int legNum : gaitState.config[index]) {
                 stanceGroup.push_back(legNum);
             }
         }
 
-        gaitState.swingTrajectory.clear();
-        gaitState.stanceTrajectory.clear();
-
         for (int legNum : swingGroup) {
             Vector3 currentPos = move.GetLegPosition(legNum);
             Vector3 targetPos = cal.direction(currentPos, legNum);
-            cal.GenerateBezierTrajectory(gaitState.swingTrajectory[legNum], currentPos, targetPos, liftHeight, resolution);
+            int size = 0;
+            cal.GenerateBezierTrajectory(gaitState.swingTrajectory[legNum].data(), size, currentPos, startPosition.at(legNum), liftHeight, resolution);
+            gaitState.swingSizes[legNum] = size;
         }
 
         for (int legNum : stanceGroup) {
             Vector3 currentPos = move.GetLegPosition(legNum);
             Vector3 targetPos = cal.direction(currentPos, legNum, true, strideMultiplier);
-            cal.GenerateStraightTrajectory(gaitState.stanceTrajectory[legNum], currentPos, targetPos, resolution);
+            int size = 0;
+            cal.GenerateStraightTrajectory(gaitState.stanceTrajectory[legNum].data(), size, currentPos, targetPos, resolution);
+            gaitState.stanceSizes[legNum] = size;
         }
     }
 
-    for (const auto& [legNum, trajectory] : gaitState.swingTrajectory) {
-        if (gaitState.step < trajectory.size()) {
-            move.Position(trajectory[gaitState.step], legNum);
+    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
+        int size = gaitState.swingSizes[legNum];
+        if (gaitState.step < size) {
+            move.Position(gaitState.swingTrajectory[legNum][gaitState.step], legNum);
         }
     }
 
-    for (const auto& [legNum, trajectory] : gaitState.stanceTrajectory) {
-        if (gaitState.step < trajectory.size()) {
-            move.Position(trajectory[gaitState.step], legNum);
+    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
+        int size = gaitState.stanceSizes[legNum];
+        if (gaitState.step < size) {
+            move.Position(gaitState.stanceTrajectory[legNum][gaitState.step], legNum);
         }
     }
 
-    if (!stickIdle) {gaitState.step++;}
+    if (!stickIdle) { gaitState.step++; }
 
     if (gaitState.step > resolution) {
         gaitState.step = 0;
