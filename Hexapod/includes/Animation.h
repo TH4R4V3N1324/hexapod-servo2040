@@ -24,6 +24,7 @@ private:
     enum Gait {tripod, ripple, wave, NumGaits};
     enum Mode {normal, strafe, tilt, NumModes};
     Animation::Gait currentGait;
+    Animation::Gait pendingGait;
     Animation::Mode currentMode;
     Vector3 homePos {0, 150, 0};
     Vector3 startPos {0, 130, -120};
@@ -39,6 +40,7 @@ private:
     Calculate cal;
     GaitState gaitState;
     bool firstStepAfterRest = true;
+    bool gaitChangeRequested = false;
 
 public:
     Animation() : currentGait(tripod), currentMode(normal) {}
