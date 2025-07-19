@@ -43,8 +43,12 @@ struct HexPacket {
 extern ControlPacket controlPacket;
 extern HexPacket hexPacket;
 
+Command lastCommand = CMD_NONE;
+int16_t lastArgs[3] = {0, 0, 0};
+
 void ReadInputData();
 void SendHexData();
 void InitI2C();
+bool CommandChanged();
 
 #endif

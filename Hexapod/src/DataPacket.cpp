@@ -28,3 +28,19 @@ void InitI2C() {
     gpio_pull_up(SDA_PIN);
     gpio_pull_up(SCL_PIN);
 }
+
+// Returns true if the a ControlPacket command changes
+bool CommandChanged() {
+    bool changed = (controlPacket.command != lastCommand) ||
+                   (controlPacket.commandArgs[0] != lastArgs[0]) ||
+                   (controlPacket.commandArgs[1] != lastArgs[1]) ||
+                   (controlPacket.commandArgs[2] != lastArgs[2]);
+
+    if (changed) {
+        lastCommand = controlPacket.command;
+        lastArgs[0] = controlPacket.commandArgs[0];
+        lastArgs[1] = controlPacket.commandArgs[1];
+        lastArgs[2] = controlPacket.commandArgs[2];
+    }
+    return changed;
+}
