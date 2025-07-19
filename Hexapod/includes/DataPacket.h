@@ -16,7 +16,6 @@ enum Command : uint8_t {
     CMD_NONE = 0,
     CMD_SET_GAIT,
     CMD_SET_MODE,
-    CMD_ENTER_CONFIG,
     CMD_SET_CONFIG,
     CMD_HOME_STANCE,
 	CMD_REQUEST_CONFIG
