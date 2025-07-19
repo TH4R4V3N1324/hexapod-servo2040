@@ -44,6 +44,7 @@ void StateFSM() {
 int main() {
     stdio_init_all();
     InitI2C();
+    configManager.loadLegOffsets();
 
     sleep_ms(5000);
     animation.Startup();

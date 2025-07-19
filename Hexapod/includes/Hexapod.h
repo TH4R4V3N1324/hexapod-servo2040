@@ -3,5 +3,6 @@
 #include <stdio.h>
 #include "DataPacket.h"
 #include "Animation.h"
+#include "ConfigManager.h"
 
 #endif
