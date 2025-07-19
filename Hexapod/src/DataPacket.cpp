@@ -1,5 +1,8 @@
 #include "DataPacket.h"
 
+Command lastCommand = CMD_NONE;
+int16_t lastArgs[3] = {0, 0, 0};
+
 // Definitions for data packets
 ControlPacket controlPacket;
 HexPacket hexPacket;
