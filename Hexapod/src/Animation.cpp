@@ -174,7 +174,7 @@ void Animation::Strafe() {
     int resolution = 50;
 
     // Check if stick is idle
-    bool stickIdle = (std::abs(receivedData.LStickX) <= 10 && std::abs(receivedData.LStickY) <= 10);
+    bool stickIdle = (std::abs(controlPacket.joystick1X) <= 10 && std::abs(controlPacket.joystick1Y) <= 10);
     if (stickIdle) idleCount++;
     else idleCount = 0;
 

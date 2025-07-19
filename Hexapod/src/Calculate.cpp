@@ -32,8 +32,8 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
 Vector3 Calculate::direction(const Vector3& start, int legNum, bool invert, double strideMultiplier) {
     const double maxStride = 60.0;
 
-    double stickX = static_cast<double>(receivedData.LStickX);
-    double stickY = static_cast<double>(receivedData.LStickY);
+    double stickX = static_cast<double>(controlPacket.joystick1X);
+    double stickY = static_cast<double>(controlPacket.joystick1Y);
 
     std::swap(stickX, stickY); // Swap X and Y to match the leg's coordinate system
 
