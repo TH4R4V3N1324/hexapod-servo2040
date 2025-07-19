@@ -47,6 +47,7 @@ set(${PROJECT_NAME}_SRCS
     src/Calculate.cpp
     src/Hexapod.cpp
     src/Move.cpp
+    src/DataPacket.cpp
 )
 
 set(${PROJECT_NAME}_HDRS

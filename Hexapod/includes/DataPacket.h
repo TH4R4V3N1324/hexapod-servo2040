@@ -1,7 +1,16 @@
 #ifndef _DATAPACKET_H_
 #define _DATAPACKET_H_
 
+#include "hardware/i2c.h"
+#include "pico/stdlib.h"
 #include <stdint.h>
+#include <stdio.h>
+
+// I2C address and port of the ESP32
+#define ESP32_SLAVE_ADDR 0x08
+#define I2C_PORT i2c0
+#define SDA_PIN 20
+#define SCL_PIN 21
 
 enum Command : uint8_t {
     CMD_NONE = 0,
@@ -33,5 +42,9 @@ struct HexPacket {
 
 extern ControlPacket controlPacket;
 extern HexPacket hexPacket;
+
+void ReadInputData();
+void SendHexData();
+void InitI2C();
 
 #endif
