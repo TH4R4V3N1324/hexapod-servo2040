@@ -48,6 +48,7 @@ set(${PROJECT_NAME}_SRCS
     src/Hexapod.cpp
     src/Move.cpp
     src/DataPacket.cpp
+    src/ConfigManager.cpp
 )
 
 set(${PROJECT_NAME}_HDRS
@@ -56,6 +57,7 @@ set(${PROJECT_NAME}_HDRS
     includes/Hexapod.h
     includes/Move.h
     includes/DataPacket.h
+    includes/ConfigManager.h
 )
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS} ${${PROJECT_NAME}_HDRS})
