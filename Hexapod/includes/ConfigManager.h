@@ -12,8 +12,8 @@ class ConfigManager {
         static int16_t jointOffsets[6][3];
 
     public:
-        void saveLegOffsets(const int16_t legOffsets[6][3]);
-        void loadLegOffsets(int16_t legOffsets[6][3]);
+        void saveLegOffsets();
+        void loadLegOffsets();
         void SetLegConfig(int legNum, int joint, int offset);
         const int16_t* getLegOffsets(int legNum) const;
 };
