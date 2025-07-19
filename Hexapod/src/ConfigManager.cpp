@@ -1,5 +1,8 @@
 #include "ConfigManager.h"
 
+// Definition of static member
+int16_t ConfigManager::jointOffsets[6][3] = {};
+
 // Save offsets
 void ConfigManager::saveLegOffsets(const int16_t legAngleOffsets[6][3]) {
     flash_range_erase(FLASH_TARGET_OFFSET, 4096); // Erase 4KB sector
@@ -13,11 +16,8 @@ void ConfigManager::loadLegOffsets(int16_t legAngleOffsets[6][3]) {
 }
 
 // Change offsets for leg
-void ConfigManager::SetLegConfig(int legNum, const int16_t newOffsets[3]) {
-    jointOffsets[legNum][0] = newOffsets[0];
-    jointOffsets[legNum][1] = newOffsets[1];
-    jointOffsets[legNum][2] = newOffsets[2];
-
+void ConfigManager::SetLegConfig(int legNum, int joint, int offset) {
+    jointOffsets[legNum][joint] = offset;
     saveLegOffsets(jointOffsets);
 }
 
