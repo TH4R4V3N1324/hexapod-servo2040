@@ -20,3 +20,8 @@ void ConfigManager::SetLegConfig(int legNum, const int16_t newOffsets[3]) {
 
     saveLegOffsets(jointOffsets);
 }
+
+// Returns the offsets for a given leg
+const int16_t* ConfigManager::getLegOffsets(int legNum) const {
+    return jointOffsets[legNum];
+}

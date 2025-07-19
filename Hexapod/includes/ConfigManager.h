@@ -15,6 +15,7 @@ class ConfigManager {
         void saveLegOffsets(const int16_t legOffsets[6][3]);
         void loadLegOffsets(int16_t legOffsets[6][3]);
         void SetLegConfig(int legNum, const int16_t newOffsets[3]);
+        const int16_t* getLegOffsets(int legNum) const;
 };
 
 #endif
