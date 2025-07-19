@@ -21,11 +21,6 @@ struct GaitState {
 
 class Animation{
 private:
-    enum Gait {tripod, ripple, wave, NumGaits};
-    enum Mode {normal, strafe, tilt, NumModes};
-    Animation::Gait currentGait;
-    Animation::Gait pendingGait;
-    Animation::Mode currentMode;
     Vector3 homePos {0, 150, 0};
     Vector3 startPos {0, 130, -120};
     std::map<int, Vector3> startPosition{
@@ -43,7 +38,12 @@ private:
     bool gaitChangeRequested = false;
 
 public:
-    Animation() : currentGait(tripod), currentMode(normal) {}
+    enum Gait {GAIT_TRIPOD, GAIT_RIPPLE, GAIT_WAVE, NUM_GAITS};
+    enum Mode {MODE_NORMAL, MODE_STRAFE, MODE_TILT, MODE_CONFIG, NUM_MODES};
+    Animation::Gait currentGait;
+    Animation::Gait pendingGait;
+    Animation::Mode currentMode;
+    Animation() : currentGait(GAIT_TRIPOD), currentMode(MODE_NORMAL) {}
     std::vector<std::vector<int>> GetLegConfig(Gait gait);
     void CycleGait();
     void CycleMode();

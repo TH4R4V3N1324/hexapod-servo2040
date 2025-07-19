@@ -3,13 +3,13 @@
 //Returns leg configuration based on given gate
 std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
     switch (gait){
-        case tripod:
+        case GAIT_TRIPOD:
             return {{1, 3, 5}, {2, 4, 6}};
             break;
-        case ripple:
+        case GAIT_RIPPLE:
             return {{3, 6}, {2, 4}, {1, 5}};
             break;
-        case wave:
+        case GAIT_WAVE:
             return {{3}, {2}, {1}, {4}, {5}, {6}};
             break;
         default:
@@ -20,13 +20,13 @@ std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
 
 //Changes to the next gait when called
 void Animation::CycleGait(){
-    pendingGait = static_cast<Gait>((currentGait + 1) % NumGaits);
+    pendingGait = static_cast<Gait>((currentGait + 1) % NUM_GAITS);
     gaitChangeRequested = true;
 }
 
 //Changes to the next mode when called
 void Animation::CycleMode(){
-    currentMode = static_cast<Mode>((currentMode + 1) % NumModes);
+    currentMode = static_cast<Mode>((currentMode + 1) % NUM_MODES);
 }
 
 //move to home, deactivate servos
