@@ -25,6 +25,12 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
     double q3 = acos((pow(r3,2) - pow(a2,2) - pow(a3,2)) / (-2*a2*a3)) * (180/pi);
     double tibiaAngle = 90 - q3;
 
+    // Apply leg offsets
+    const int16_t* offset = configManager.getLegOffsets(legNum - 1);
+    coxaAngle  += offset[0];
+    femurAngle += offset[1];
+    tibiaAngle += offset[2];
+
     return {coxaAngle, femurAngle, tibiaAngle};
 };
 
