@@ -18,19 +18,30 @@ std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
     }
 }
 
-//Changes to the next gait when called
+// Changes to the next gait when called
 void Animation::CycleGait(){
     pendingGait = static_cast<Gait>((currentGait + 1) % NUM_GAITS);
     gaitChangeRequested = true;
 }
 
-//Changes to the next mode when called
-void Animation::CycleMode(){
+// Changes to given gait
+void Animation::SetGait(Gait gait) {
+    pendingGait = gait;
+    gaitChangeRequested = true;
+}
+
+// Changes to the next mode when called
+void Animation::CycleMode() {
     currentMode = static_cast<Mode>((currentMode + 1) % NUM_MODES);
 }
 
-//move to home, deactivate servos
-void Animation::Shutdown(){
+// Changes to given mode
+void Animation::SetMode(Mode mode) {
+    currentMode = mode;
+}
+
+// Move to home, deactivate servos
+void Animation::Shutdown() {
     for(size_t i = 1; i <= 6; ++i){
         move.Position(homePos, i);
         sleep_ms(1000);
@@ -38,8 +49,8 @@ void Animation::Shutdown(){
     }
 }
 
-//move to home position for all legs
-void Animation::Startup(){
+// Move to home position for all legs
+void Animation::Startup() {
     static bool initialized = false;
 
     if(!initialized){

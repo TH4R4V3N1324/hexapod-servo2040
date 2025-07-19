@@ -46,7 +46,9 @@ public:
     Animation() : currentGait(GAIT_TRIPOD), currentMode(MODE_NORMAL) {}
     std::vector<std::vector<int>> GetLegConfig(Gait gait);
     void CycleGait();
+    void SetGait(Gait gait);
     void CycleMode();
+    void SetMode(Mode mode);
     void Startup();
     void Shutdown();
     void Strafe();
