@@ -1,20 +1,24 @@
 #include "Hexapod.h"
 
 Animation animation;
+ConfigManager configManager;
 
-void commandFSM() {
+void CommandFSM() {
     switch (controlPacket.command) {
         case CMD_SET_GAIT:
+            animation.SetGait(static_cast<Animation::Gait>(controlPacket.commandArgs[1]));
             break;
         case CMD_SET_MODE:
-            break;
-        case CMD_ENTER_CONFIG:
+            animation.SetMode(static_cast<Animation::Mode>(controlPacket.commandArgs[1]));
             break;
         case CMD_SET_CONFIG:
+            configManager.SetLegConfig(controlPacket.commandArgs[0], controlPacket.commandArgs[1], controlPacket.commandArgs[2]);
             break;
         case CMD_HOME_STANCE:
+            animation.returnToStart();
             break;
         case CMD_REQUEST_CONFIG:
+            memcpy(hexPacket.legConfigs, configManager.getLegOffsets(controlPacket.commandArgs[0]), sizeof(int16_t) * 3);
             break;
         default:
             break;
@@ -26,6 +30,7 @@ void StateFSM() {
         case Animation::MODE_NORMAL:
             break;
         case Animation::MODE_STRAFE:
+            animation.Strafe();
             break;
         case Animation::MODE_TILT:
             break;
@@ -45,7 +50,8 @@ int main() {
 
     while (1) {
         ReadInputData();
-        animation.Strafe();
+        CommandFSM();
+        StateFSM();
         sleep_ms(1);
     }
 }
