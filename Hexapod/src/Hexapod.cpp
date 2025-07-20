@@ -6,10 +6,10 @@ ConfigManager configManager;
 void CommandFSM() {
     switch (controlPacket.command) {
         case CMD_SET_GAIT:
-            animation.SetGait(static_cast<Animation::Gait>(controlPacket.commandArgs[1]));
+            animation.SetGait(static_cast<Animation::Gait>(controlPacket.commandArgs[0]));
             break;
         case CMD_SET_MODE:
-            animation.SetMode(static_cast<Animation::Mode>(controlPacket.commandArgs[1]));
+            animation.SetMode(static_cast<Animation::Mode>(controlPacket.commandArgs[0]));
             break;
         case CMD_SET_CONFIG:
             configManager.SetLegConfig(controlPacket.commandArgs[0], controlPacket.commandArgs[1], controlPacket.commandArgs[2]);
