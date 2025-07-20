@@ -51,7 +51,8 @@ int main() {
 
     while (1) {
         ReadInputData();
-        CommandFSM();
+        if(CommandChanged()) {CommandFSM();}
+        SendHexData();
         StateFSM();
         sleep_ms(1);
     }

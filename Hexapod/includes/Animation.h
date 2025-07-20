@@ -21,8 +21,9 @@ struct GaitState {
 
 class Animation{
 private:
+    double currentHeight = 120;
     Vector3 homePos {0, 150, 0};
-    Vector3 startPos {0, 130, -120};
+    Vector3 startPos {0, 130, -currentHeight};
     std::map<int, Vector3> startPosition{
         {1, startPos.rotate(-15)},
         {2, startPos},
@@ -49,6 +50,7 @@ public:
     void SetGait(Gait gait);
     void CycleMode();
     void SetMode(Mode mode);
+    void SetHeight(double newHeight);
     void Startup();
     void Shutdown();
     void Strafe();
