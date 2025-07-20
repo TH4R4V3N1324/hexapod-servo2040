@@ -42,8 +42,8 @@ void Animation::SetMode(Mode mode) {
 
 // Changes currentHeight to new height and updates startPosition
 void Animation::SetHeight(double newHeight) {
-    currentHeight = newHeight;
-    startPos = Vector3(0, 130, -currentHeight);
+    hexPacket.currentHeight = newHeight;
+    startPos = Vector3{0, 130, -static_cast<double>(hexPacket.currentHeight)};
     startPosition = {
         {1, startPos.rotate(-15)},
         {2, startPos},
@@ -71,6 +71,16 @@ void Animation::Startup() {
         Shutdown();
         initialized = true;
     }
+
+    startPos = Vector3{0, 130, -static_cast<double>(hexPacket.currentHeight)};
+    startPosition = {
+        {1, startPos.rotate(-15)},
+        {2, startPos},
+        {3, startPos.rotate(15)},
+        {4, startPos.rotate(15)},
+        {5, startPos},
+        {6, startPos.rotate(-15)}
+    };
     
     for(size_t i = 1; i <= 6; ++i){
         move.Position(startPosition.at(i), i);

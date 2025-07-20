@@ -45,6 +45,7 @@ int main() {
     stdio_init_all();
     InitI2C();
     configManager.loadLegOffsets();
+    hexPacket.currentHeight = 120;
 
     sleep_ms(5000);
     animation.Startup();

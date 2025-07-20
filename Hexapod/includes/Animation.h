@@ -2,6 +2,7 @@
 #define _ANIMATION_H_
 #include "Move.h"
 #include "Calculate.h"
+#include "DataPacket.h"
 #include <stdio.h>
 #include <array>
 
@@ -21,9 +22,8 @@ struct GaitState {
 
 class Animation{
 private:
-    double currentHeight = 120;
     Vector3 homePos {0, 150, 0};
-    Vector3 startPos {0, 130, -currentHeight};
+    Vector3 startPos {0, 130, -static_cast<double>(hexPacket.currentHeight)};
     std::map<int, Vector3> startPosition{
         {1, startPos.rotate(-15)},
         {2, startPos},
