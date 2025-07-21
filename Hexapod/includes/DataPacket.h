@@ -27,6 +27,8 @@ enum Command : uint8_t {
 struct ControlPacket {
     int16_t joystick1X;
     int16_t joystick1Y;
+    int16_t joystick2X;
+    int16_t joystick2Y;
     int16_t currentHeight;
     Command command;
     int16_t commandArgs[3];
@@ -36,6 +38,9 @@ struct ControlPacket {
 struct HexPacket {
     int16_t legConfigs[3];
     int16_t currentHeight;
+    int16_t currentPhase;
+    int16_t currentGait;
+    int16_t currentMode;
 };
 #pragma pack(pop)
 
