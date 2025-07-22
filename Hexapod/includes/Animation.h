@@ -48,7 +48,7 @@ private:
         std::function<Vector3(int, const Vector3&)> swingTargetFunc,
         std::function<Vector3(int, const Vector3&)> stanceTargetFunc
     );
-    void PerformLegStep(bool stickIdle, int resolution);
+    void PerformLegStep(bool stickIdle, int resolution, bool handlePhaseTransition = true);
 
 public:
     enum Gait {GAIT_TRIPOD, GAIT_RIPPLE, GAIT_WAVE, NUM_GAITS};

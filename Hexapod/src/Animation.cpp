@@ -87,6 +87,7 @@ void Animation::Startup() {
     }
 }
 
+// Returns if stick values have changed significantly
 bool SignificantStickChange(const int& stickX, const int& stickY) {
     static int lastX = 0;
     static int lastY = 0;
@@ -99,107 +100,6 @@ bool SignificantStickChange(const int& stickX, const int& stickY) {
     lastY = stickY;
 
     return significantChange;
-}
-
-void Animation::returnToStart() {
-    static int counter = 0;
-    static bool trajectoryGenerated = false;
-    int liftHeight = 50;
-    int resolution = 50;
-
-    // Safety check: phase must be valid
-    if (gaitState.phase >= gaitState.config.size()) {
-        std::cerr << "[returnToStart] ERROR: Invalid gaitState.phase: "
-                  << gaitState.phase << ", config size: "
-                  << gaitState.config.size() << std::endl;
-        gaitState.idleReturning = false;
-        counter = 0;
-        gaitState.step = 0;
-        trajectoryGenerated = false;
-        return;
-    }
-
-    auto swingGroup = gaitState.config[gaitState.phase];
-    std::vector<int> stanceGroup;
-
-    // Build stance group (all legs not in swing group)
-    for (int idx = 0; idx < gaitState.config.size(); ++idx) {
-        if (idx == gaitState.phase) continue;
-        for (int legNum : gaitState.config[idx])
-            stanceGroup.push_back(legNum);
-    }
-
-    // Generate trajectories at the start of each phase
-    if (gaitState.step == 0 && !trajectoryGenerated) {
-        // Clear sizes for all legs
-        for (int i = 1; i <= MAX_LEGS; ++i) {
-            gaitState.swingSizes[i] = 0;
-            gaitState.stanceSizes[i] = 0;
-        }
-
-        // Generate swing trajectories (to start positions)
-        for (int legNum : swingGroup) {
-            Vector3 currentPos = move.GetLegPosition(legNum);
-            int size = 0;
-            auto it = startPosition.find(legNum);
-            if (it == startPosition.end()) {
-                printf("startPosition missing for legNum: %d\n", legNum);
-                continue;
-            }
-            cal.GenerateBezierTrajectory(
-                gaitState.swingTrajectory[legNum].data(),
-                size,
-                currentPos,
-                it->second,
-                liftHeight,
-                resolution
-            );
-            gaitState.swingSizes[legNum] = size;
-        }
-
-        // Generate stance trajectories (hold current position)
-        for (int legNum : stanceGroup) {
-            Vector3 currentPos = move.GetLegPosition(legNum);
-            for (int i = 0; i <= resolution; ++i)
-                gaitState.stanceTrajectory[legNum][i] = currentPos;
-            gaitState.stanceSizes[legNum] = resolution + 1;
-        }
-    }
-
-    // Move all legs for this step
-    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
-        int swingSize = gaitState.swingSizes[legNum];
-        int stanceSize = gaitState.stanceSizes[legNum];
-        if (gaitState.step < swingSize)
-            move.Position(gaitState.swingTrajectory[legNum][gaitState.step], legNum);
-        if (gaitState.step < stanceSize)
-            move.Position(gaitState.stanceTrajectory[legNum][gaitState.step], legNum);
-    }
-
-    // Advance step
-    gaitState.step++;
-
-    // Phase transition
-    if (gaitState.step > resolution) {
-        counter++;
-        gaitState.step = 0;
-        gaitState.phase = (gaitState.phase + 1) % gaitState.config.size();
-
-        // After all phases, finish return-to-start and handle gait change if requested
-        if (counter > gaitState.config.size()) {
-            counter = 0;
-            gaitState.idleReturning = false;
-            trajectoryGenerated = false;
-
-            if (gaitChangeRequested) {
-                currentGait = pendingGait;
-                gaitState.config = GetLegConfig(currentGait);
-                gaitState.phase = 0;
-                gaitState.step = 0;
-                gaitChangeRequested = false;
-            }
-        }
-    }
 }
 
 Vector3 Animation::BlendTargetPosition(const Vector3& currentPos, const Vector3& forwardPos, const Vector3& rotationPos) {
@@ -298,7 +198,7 @@ void Animation::GenerateTrajectories(
 }
 
 // Performs a single step for all legs based on the current gait state
-void Animation::PerformLegStep(bool stickIdle, int resolution) {
+void Animation::PerformLegStep(bool stickIdle, int resolution, bool handlePhaseTransition) {
     for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
         int swingSize = gaitState.swingSizes[legNum];
         int stanceSize = gaitState.stanceSizes[legNum];
@@ -309,12 +209,75 @@ void Animation::PerformLegStep(bool stickIdle, int resolution) {
     }
     // Advance step if not idle
     if (!stickIdle) gaitState.step++;
+    if (!handlePhaseTransition) return;
 
     // Phase transition
     if (gaitState.step > resolution) {
         gaitState.phase = (gaitState.phase + 1) % gaitState.config.size();
         gaitState.step = 0;
     }    
+}
+
+// Returns to the start position of the hexapod
+void Animation::returnToStart() {
+    static int counter = 0;
+    static bool trajectoryGenerated = false;
+    int liftHeight = 50;
+    int resolution = 50;
+
+    // Safety check: phase must be valid
+    if (gaitState.phase >= gaitState.config.size()) {
+        std::cerr << "[returnToStart] ERROR: Invalid gaitState.phase: "
+                  << gaitState.phase << ", config size: "
+                  << gaitState.config.size() << std::endl;
+        gaitState.idleReturning = false;
+        counter = 0;
+        gaitState.step = 0;
+        trajectoryGenerated = false;
+        return;
+    }
+
+    if (gaitState.step == 0 && !trajectoryGenerated) {
+        GenerateTrajectories(
+            liftHeight,
+            resolution,
+            // Swing: move to start position
+            [this](int legNum, const Vector3& currentPos) {
+                auto it = startPosition.find(legNum);
+                return (it != startPosition.end()) ? it->second : currentPos;
+            },
+            // Stance: hold current position
+            [](int, const Vector3& currentPos) {
+                return currentPos;
+            }
+        );
+        trajectoryGenerated = true;
+    }
+
+    // Move all legs for this step
+    PerformLegStep(false, resolution, false);
+
+    // Phase transition
+    if (gaitState.step > resolution) {
+        counter++;
+        gaitState.step = 0;
+        gaitState.phase = (gaitState.phase + 1) % gaitState.config.size();
+
+        // After all phases, finish return-to-start and handle gait change if requested
+        if (counter > gaitState.config.size()) {
+            counter = 0;
+            gaitState.idleReturning = false;
+            trajectoryGenerated = false;
+
+            if (gaitChangeRequested) {
+                currentGait = pendingGait;
+                gaitState.config = GetLegConfig(currentGait);
+                gaitState.phase = 0;
+                gaitState.step = 0;
+                gaitChangeRequested = false;
+            }
+        }
+    }
 }
 
 void Animation::Strafe() {
