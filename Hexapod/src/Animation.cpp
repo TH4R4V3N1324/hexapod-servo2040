@@ -315,12 +315,16 @@ void Animation::Strafe() {
         resolution,
         // Swing target
         [this](int legNum, const Vector3& currentPos) {
-            Vector3 targetPos = cal.direction(controlPacket.joystick1X, controlPacket.joystick1Y, currentPos, legNum);
+            Vector3 directionPos = cal.direction(controlPacket.joystick1X, controlPacket.joystick1Y, currentPos, legNum);
+            Vector3 rotationPos = cal.direction(controlPacket.joystick2X, 0, currentPos, legNum, false, 1.0, false);
+            Vector3 targetPos = BlendTargetPosition(currentPos, directionPos, rotationPos);
             return targetPos;
         },
         // Stance target
         [this, strideMultiplier](int legNum, const Vector3& currentPos) {
-            Vector3 targetPos = cal.direction(controlPacket.joystick1X, controlPacket.joystick1Y, currentPos, legNum, true, strideMultiplier);
+            Vector3 directionPos = cal.direction(controlPacket.joystick1X, controlPacket.joystick1Y, currentPos, legNum, true, strideMultiplier);
+            Vector3 rotationPos = cal.direction(controlPacket.joystick2X, 0, currentPos, legNum, false, strideMultiplier, false);
+            Vector3 targetPos = BlendTargetPosition(currentPos, directionPos, rotationPos);
             return targetPos;
         }
         );
