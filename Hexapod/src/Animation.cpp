@@ -103,15 +103,20 @@ bool SignificantStickChange(const int& stickX, const int& stickY) {
 }
 
 Vector3 Animation::BlendTargetPosition(const Vector3& currentPos, const Vector3& forwardPos, const Vector3& rotationPos) {
-    if (forwardPos == currentPos && rotationPos == currentPos) {
-        return currentPos; // No movement
-    } else if (forwardPos == currentPos) {
-        return rotationPos;
-    } else if (rotationPos == currentPos) {
-        return forwardPos;
-    } else {
-        return (forwardPos + rotationPos) / 2; // Blend
+    // Compute deltas from current position
+    Vector3 forwardDelta = forwardPos - currentPos;
+    Vector3 rotationDelta = rotationPos - currentPos;
+
+    // Add the deltas
+    Vector3 blended = currentPos + forwardDelta + rotationDelta;
+
+    // Optionally, clamp the stride to a maximum distance from currentPos if needed
+    double maxStride = 100.0;
+    if ((blended - currentPos).length() > maxStride) {
+         blended = currentPos + (blended - currentPos).normalized() * maxStride;
     }
+
+    return blended;
 }
 
 // Handles idle return logic and returns true if idle return was handled
