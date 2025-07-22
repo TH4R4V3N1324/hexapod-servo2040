@@ -303,3 +303,109 @@ void Animation::Strafe() {
         gaitState.step = 0;
     }
 }   
+
+void Animation::Normal() {
+    static int idleCount = 0;
+    static const int idleThreshold = 100;
+    int liftHeight = 50;
+    int resolution = 50;
+
+    // Check if stick is idle
+    bool stickIdle = (std::abs(controlPacket.joystick1X) <= 10 && std::abs(controlPacket.joystick1Y) <= 10);
+    if (stickIdle) idleCount++;
+    else idleCount = 0;
+
+    // Handle idle/return-to-start logic
+    if (idleCount > idleThreshold || gaitState.idleReturning) {
+        if (!gaitState.idleReturning) {
+            gaitState.idleReturning = true;
+            gaitState.step = 0;
+        }
+        returnToStart();
+        idleCount = 0;
+        return;
+    }
+
+    // Ensure gait config is set
+    if (gaitState.config.empty())
+        gaitState.config = GetLegConfig(currentGait);
+
+    // Calculate stride multiplier safely
+    double strideMultiplier = 1.0;
+    if (gaitState.config.size() > 1)
+        strideMultiplier = 1.0 / (gaitState.config.size() - 1);
+
+    // Generate trajectories at the start of each phase
+    if (gaitState.step == 0) {
+        auto swingGroup = gaitState.config[gaitState.phase];
+        std::vector<int> stanceGroup;
+
+        // Build stance group (all legs not in swing group)
+        for (int idx = 0; idx < gaitState.config.size(); ++idx) {
+            if (idx == gaitState.phase) continue;
+            for (int legNum : gaitState.config[idx])
+                stanceGroup.push_back(legNum);
+        }
+
+        // Clear sizes for all legs
+        for (int i = 1; i <= MAX_LEGS; ++i) {
+            gaitState.swingSizes[i] = 0;
+            gaitState.stanceSizes[i] = 0;
+        }
+
+        // Generate swing trajectories
+        for (int legNum : swingGroup) {
+            Vector3 currentPos = move.GetLegPosition(legNum);
+            Vector3 forwardPos = cal.direction(0, controlPacket.joystick1Y, currentPos, legNum);
+            Vector3 rotationPos = cal.direction(controlPacket.joystick1X, 0, currentPos, legNum, false, 1.0, false);
+            Vector3 targetPos = forwardPos + rotationPos / 2; // Average the two directions
+            int size = 0;
+            cal.GenerateBezierTrajectory(
+                gaitState.swingTrajectory[legNum].data(),
+                size,
+                currentPos,
+                targetPos,
+                liftHeight,
+                resolution
+            );
+            gaitState.swingSizes[legNum] = size;
+        }
+
+        // Generate stance trajectories
+        for (int legNum : stanceGroup) {
+            Vector3 currentPos = move.GetLegPosition(legNum);
+            Vector3 forwardPos = cal.direction(0, controlPacket.joystick1Y, currentPos, legNum, true , strideMultiplier);
+            Vector3 rotationPos = cal.direction(controlPacket.joystick1X, 0, currentPos, legNum, false, strideMultiplier, false);
+            Vector3 targetPos = forwardPos + rotationPos / 2; // Average the two directions
+            int size = 0;
+            cal.GenerateStraightTrajectory(
+                gaitState.stanceTrajectory[legNum].data(),
+                size,
+                currentPos,
+                targetPos,
+                resolution
+            );
+            gaitState.stanceSizes[legNum] = size;
+        }
+    }
+
+    // Move all legs for this step
+    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
+        int swingSize = gaitState.swingSizes[legNum];
+        int stanceSize = gaitState.stanceSizes[legNum];
+        if (gaitState.step < swingSize)
+            move.Position(gaitState.swingTrajectory[legNum][gaitState.step], legNum);
+        if (gaitState.step < stanceSize)
+            move.Position(gaitState.stanceTrajectory[legNum][gaitState.step], legNum);
+    }
+
+    // Advance step if not idle
+    if (!stickIdle)
+        gaitState.step++;
+
+    // Phase transition
+    if (gaitState.step > resolution) {
+        gaitState.phase = (gaitState.phase + 1) % gaitState.config.size();
+        gaitState.step = 0;
+    }
+} 

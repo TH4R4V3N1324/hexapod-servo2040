@@ -55,6 +55,7 @@ public:
     void Shutdown();
     void Strafe();
     void returnToStart();
+    void Normal();
 };
 
 #endif 
