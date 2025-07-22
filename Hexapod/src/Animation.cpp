@@ -251,7 +251,6 @@ void Animation::returnToStart() {
                 return currentPos;
             }
         );
-        trajectoryGenerated = true;
     }
 
     // Move all legs for this step
