@@ -51,6 +51,12 @@ struct Vector3 {
             z
         };
     }
+    bool operator==(const Vector3& other) const {
+        const double epsilon = 1e-6;
+        return std::abs(x - other.x) < epsilon &&
+               std::abs(y - other.y) < epsilon &&
+               std::abs(z - other.z) < epsilon;
+    }
 };
 
 struct JointAngles {
