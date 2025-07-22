@@ -73,7 +73,7 @@ public:
     void GenerateStraightTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int resolution);
     void GenerateBezierTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
     JointAngles angle(Vector3 position, int legNum);
-    Vector3 direction(const Vector3& start, int legNum, bool invert = false, double strideMultiplier = 1.0);
+    Vector3 direction(const int16_t& joystickValueX, const int16_t& joystickValueY, const Vector3& start, int legNum, bool invert = false, double strideMultiplier = 1.0, bool useBodyFrame = true);
     std::map<int, LegConfig> legConfigs;
 
     Calculate() {

@@ -254,7 +254,7 @@ void Animation::Strafe() {
         // Generate swing trajectories
         for (int legNum : swingGroup) {
             Vector3 currentPos = move.GetLegPosition(legNum);
-            Vector3 targetPos = cal.direction(currentPos, legNum);
+            Vector3 targetPos = cal.direction(controlPacket.joystick1X, controlPacket.joystick1Y, currentPos, legNum);
             int size = 0;
             cal.GenerateBezierTrajectory(
                 gaitState.swingTrajectory[legNum].data(),
@@ -270,7 +270,7 @@ void Animation::Strafe() {
         // Generate stance trajectories
         for (int legNum : stanceGroup) {
             Vector3 currentPos = move.GetLegPosition(legNum);
-            Vector3 targetPos = cal.direction(currentPos, legNum, true, strideMultiplier);
+            Vector3 targetPos = cal.direction(controlPacket.joystick1X, controlPacket.joystick1Y, currentPos, legNum, true, strideMultiplier);
             int size = 0;
             cal.GenerateStraightTrajectory(
                 gaitState.stanceTrajectory[legNum].data(),

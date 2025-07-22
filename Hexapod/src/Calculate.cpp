@@ -34,12 +34,12 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
     return {coxaAngle, femurAngle, tibiaAngle};
 };
 
-//Calculates end position of a leg based on the current position, velocity, and time between steps
-Vector3 Calculate::direction(const Vector3& start, int legNum, bool invert, double strideMultiplier) {
+//Calculates end position of a leg based on the current position and stride length
+Vector3 Calculate::direction(const int16_t& joystickValueX, const int16_t& joystickValueY, const Vector3& start, int legNum, bool invert, double strideMultiplier, bool useBodyFrame) {
     const double maxStride = 60.0;
 
-    double stickX = static_cast<double>(controlPacket.joystick1X);
-    double stickY = static_cast<double>(controlPacket.joystick1Y);
+    double stickX = static_cast<double>(joystickValueX);
+    double stickY = static_cast<double>(joystickValueY);
 
     std::swap(stickX, stickY); // Swap X and Y to match the leg's coordinate system
 
@@ -48,7 +48,7 @@ Vector3 Calculate::direction(const Vector3& start, int legNum, bool invert, doub
         stickY = -stickY;
     }
 
-    if (legConfigs[legNum].isMirrored) {
+    if (legConfigs[legNum].isMirrored && useBodyFrame) {
         stickY = -stickY;
     }
 
@@ -64,6 +64,8 @@ Vector3 Calculate::direction(const Vector3& start, int legNum, bool invert, doub
     double rotationAngle = legConfigs[legNum].rotationAngle;
     double deltaX = stride * cos(angle);
     double deltaY = stride * sin(angle);
+
+    if (!useBodyFrame) {return {start.x + deltaX, start.y + deltaY, start.z};}
 
     double dx_rot = deltaX * cos(rotationAngle) - deltaY * sin(rotationAngle);
     double dy_rot = deltaX * sin(rotationAngle) + deltaY * cos(rotationAngle);
