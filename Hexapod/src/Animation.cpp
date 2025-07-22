@@ -214,11 +214,9 @@ Vector3 Animation::BlendTargetPosition(const Vector3& currentPos, const Vector3&
     }
 }
 
-void Animation::Strafe() {
+bool Animation::HandleIdleReturn() {
     static int idleCount = 0;
     static const int idleThreshold = 100;
-    int liftHeight = 50;
-    int resolution = 50;
 
     // Check if stick is idle
     bool stickIdle = (std::abs(controlPacket.joystick1X) <= 10 && std::abs(controlPacket.joystick1Y) <= 10);
@@ -233,8 +231,18 @@ void Animation::Strafe() {
         }
         returnToStart();
         idleCount = 0;
-        return;
+        return true; // Indicate that idle return was handled
     }
+    return stickIdle; // Return whether stick is idle
+}
+
+void Animation::Strafe() {
+    int liftHeight = 50;
+    int resolution = 50;
+
+    // Check if stick is idle
+    bool stickIdle = HandleIdleReturn();
+    if (gaitState.idleReturning) return;
 
     // Ensure gait config is set
     if (gaitState.config.empty())
@@ -317,26 +325,12 @@ void Animation::Strafe() {
 }   
 
 void Animation::Normal() {
-    static int idleCount = 0;
-    static const int idleThreshold = 100;
     int liftHeight = 50;
     int resolution = 50;
 
     // Check if stick is idle
-    bool stickIdle = (std::abs(controlPacket.joystick1X) <= 10 && std::abs(controlPacket.joystick1Y) <= 10);
-    if (stickIdle) idleCount++;
-    else idleCount = 0;
-
-    // Handle idle/return-to-start logic
-    if (idleCount > idleThreshold || gaitState.idleReturning) {
-        if (!gaitState.idleReturning) {
-            gaitState.idleReturning = true;
-            gaitState.step = 0;
-        }
-        returnToStart();
-        idleCount = 0;
-        return;
-    }
+    bool stickIdle = HandleIdleReturn();
+    if (gaitState.idleReturning) return;
 
     // Ensure gait config is set
     if (gaitState.config.empty())
