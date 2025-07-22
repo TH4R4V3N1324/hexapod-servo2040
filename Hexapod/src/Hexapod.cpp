@@ -28,6 +28,7 @@ void CommandFSM() {
 void StateFSM() {
     switch (animation.currentMode) {
         case Animation::MODE_NORMAL:
+            animation.Normal();
             break;
         case Animation::MODE_STRAFE:
             animation.Strafe();

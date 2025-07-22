@@ -41,16 +41,18 @@ Vector3 Calculate::direction(const int16_t& joystickValueX, const int16_t& joyst
     double stickX = static_cast<double>(joystickValueX);
     double stickY = static_cast<double>(joystickValueY);
 
-    std::swap(stickX, stickY); // Swap X and Y to match the leg's coordinate system
+    if (useBodyFrame) std::swap(stickX, stickY); // Swap X and Y to match the leg's coordinate system
 
     if (invert) {
         stickX = -stickX;
         stickY = -stickY;
     }
 
-    if (legConfigs[legNum].isMirrored && useBodyFrame) {
-        stickY = -stickY;
+    if (legConfigs[legNum].isMirrored) {
+        if (useBodyFrame) stickY = -stickY; else stickX = -stickX;
     }
+
+    if (!useBodyFrame) stickX = -stickX;
 
     if (std::abs(stickX) <= 10 && std::abs(stickY) <= 10) {return start;}
    

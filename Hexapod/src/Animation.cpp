@@ -347,7 +347,7 @@ void Animation::Normal() {
         // Stance target
         [this, strideMultiplier](int legNum, const Vector3& currentPos) {
             Vector3 forwardPos = cal.direction(0, controlPacket.joystick1Y, currentPos, legNum, true , strideMultiplier);
-            Vector3 rotationPos = cal.direction(controlPacket.joystick1X, 0, currentPos, legNum, false, strideMultiplier, false);
+            Vector3 rotationPos = cal.direction(controlPacket.joystick1X, 0, currentPos, legNum, true, strideMultiplier, false);
             Vector3 targetPos = BlendTargetPosition(currentPos, forwardPos, rotationPos);
             return targetPos;
         }
