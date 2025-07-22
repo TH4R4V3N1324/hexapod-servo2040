@@ -242,6 +242,10 @@ void Animation::EnsureGaitConfig() {
     }
 }
 
+double Animation::CalculateStrideMultiplier() {
+    return (gaitState.config.size() > 1) ? 1.0 / (gaitState.config.size() - 1) : 1.0;
+}
+
 void Animation::Strafe() {
     int liftHeight = 50;
     int resolution = 50;
@@ -254,9 +258,7 @@ void Animation::Strafe() {
     EnsureGaitConfig();
 
     // Calculate stride multiplier safely
-    double strideMultiplier = 1.0;
-    if (gaitState.config.size() > 1)
-        strideMultiplier = 1.0 / (gaitState.config.size() - 1);
+    double strideMultiplier = CalculateStrideMultiplier();
 
     // Generate trajectories at the start of each phase
     if (gaitState.step == 0) {
@@ -341,9 +343,7 @@ void Animation::Normal() {
     EnsureGaitConfig();
 
     // Calculate stride multiplier safely
-    double strideMultiplier = 1.0;
-    if (gaitState.config.size() > 1)
-        strideMultiplier = 1.0 / (gaitState.config.size() - 1);
+    double strideMultiplier = CalculateStrideMultiplier();
 
     // Generate trajectories at the start of each phase
     if (gaitState.step == 0) {
