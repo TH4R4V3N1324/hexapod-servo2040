@@ -39,6 +39,7 @@ private:
     bool gaitChangeRequested = false;
     Vector3 BlendTargetPosition(const Vector3& currentPos, const Vector3& forwardPos, const Vector3& rotationPos);
     bool HandleIdleReturn();
+    void EnsureGaitConfig();
 
 public:
     enum Gait {GAIT_TRIPOD, GAIT_RIPPLE, GAIT_WAVE, NUM_GAITS};

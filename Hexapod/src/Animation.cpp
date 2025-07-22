@@ -236,6 +236,12 @@ bool Animation::HandleIdleReturn() {
     return stickIdle; // Return whether stick is idle
 }
 
+void Animation::EnsureGaitConfig() {
+    if (gaitState.config.empty()) {
+        gaitState.config = GetLegConfig(currentGait);
+    }
+}
+
 void Animation::Strafe() {
     int liftHeight = 50;
     int resolution = 50;
@@ -245,8 +251,7 @@ void Animation::Strafe() {
     if (gaitState.idleReturning) return;
 
     // Ensure gait config is set
-    if (gaitState.config.empty())
-        gaitState.config = GetLegConfig(currentGait);
+    EnsureGaitConfig();
 
     // Calculate stride multiplier safely
     double strideMultiplier = 1.0;
@@ -333,8 +338,7 @@ void Animation::Normal() {
     if (gaitState.idleReturning) return;
 
     // Ensure gait config is set
-    if (gaitState.config.empty())
-        gaitState.config = GetLegConfig(currentGait);
+    EnsureGaitConfig();
 
     // Calculate stride multiplier safely
     double strideMultiplier = 1.0;
