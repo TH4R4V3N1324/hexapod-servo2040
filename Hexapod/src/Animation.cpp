@@ -214,6 +214,7 @@ Vector3 Animation::BlendTargetPosition(const Vector3& currentPos, const Vector3&
     }
 }
 
+// Handles idle return logic and returns true if idle return was handled
 bool Animation::HandleIdleReturn() {
     static int idleCount = 0;
     static const int idleThreshold = 100;
@@ -231,21 +232,23 @@ bool Animation::HandleIdleReturn() {
         }
         returnToStart();
         idleCount = 0;
-        return true; // Indicate that idle return was handled
     }
     return stickIdle; // Return whether stick is idle
 }
 
+// Ensures the gait configuration is set up correctly
 void Animation::EnsureGaitConfig() {
     if (gaitState.config.empty()) {
         gaitState.config = GetLegConfig(currentGait);
     }
 }
 
+// Calculate stride multiplier based on the number of phases in the current gait
 double Animation::CalculateStrideMultiplier() {
     return (gaitState.config.size() > 1) ? 1.0 / (gaitState.config.size() - 1) : 1.0;
 }
 
+// Generates trajectories for the current gait phase
 void Animation::GenerateTrajectories(
     int liftHeight,
     int resolution,
@@ -294,6 +297,26 @@ void Animation::GenerateTrajectories(
     }
 }
 
+// Performs a single step for all legs based on the current gait state
+void Animation::PerformLegStep(bool stickIdle, int resolution) {
+    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
+        int swingSize = gaitState.swingSizes[legNum];
+        int stanceSize = gaitState.stanceSizes[legNum];
+        if (gaitState.step < swingSize)
+            move.Position(gaitState.swingTrajectory[legNum][gaitState.step], legNum);
+        if (gaitState.step < stanceSize)
+            move.Position(gaitState.stanceTrajectory[legNum][gaitState.step], legNum);
+    }
+    // Advance step if not idle
+    if (!stickIdle) gaitState.step++;
+
+    // Phase transition
+    if (gaitState.step > resolution) {
+        gaitState.phase = (gaitState.phase + 1) % gaitState.config.size();
+        gaitState.step = 0;
+    }    
+}
+
 void Animation::Strafe() {
     int liftHeight = 50;
     int resolution = 50;
@@ -329,27 +352,9 @@ void Animation::Strafe() {
         }
         );
     }
-
     // Move all legs for this step
-    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
-        int swingSize = gaitState.swingSizes[legNum];
-        int stanceSize = gaitState.stanceSizes[legNum];
-        if (gaitState.step < swingSize)
-            move.Position(gaitState.swingTrajectory[legNum][gaitState.step], legNum);
-        if (gaitState.step < stanceSize)
-            move.Position(gaitState.stanceTrajectory[legNum][gaitState.step], legNum);
-    }
-
-    // Advance step if not idle
-    if (!stickIdle)
-        gaitState.step++;
-
-    // Phase transition
-    if (gaitState.step > resolution) {
-        gaitState.phase = (gaitState.phase + 1) % gaitState.config.size();
-        gaitState.step = 0;
-    }
-}   
+    PerformLegStep(stickIdle, resolution);
+}
 
 void Animation::Normal() {
     int liftHeight = 50;
@@ -386,24 +391,6 @@ void Animation::Normal() {
         }
         );
     }
-
     // Move all legs for this step
-    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
-        int swingSize = gaitState.swingSizes[legNum];
-        int stanceSize = gaitState.stanceSizes[legNum];
-        if (gaitState.step < swingSize)
-            move.Position(gaitState.swingTrajectory[legNum][gaitState.step], legNum);
-        if (gaitState.step < stanceSize)
-            move.Position(gaitState.stanceTrajectory[legNum][gaitState.step], legNum);
-    }
-
-    // Advance step if not idle
-    if (!stickIdle)
-        gaitState.step++;
-
-    // Phase transition
-    if (gaitState.step > resolution) {
-        gaitState.phase = (gaitState.phase + 1) % gaitState.config.size();
-        gaitState.step = 0;
-    }
+    PerformLegStep(stickIdle, resolution);
 } 
