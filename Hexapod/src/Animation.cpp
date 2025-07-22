@@ -202,6 +202,18 @@ void Animation::returnToStart() {
     }
 }
 
+Vector3 Animation::BlendTargetPosition(const Vector3& currentPos, const Vector3& forwardPos, const Vector3& rotationPos) {
+    if (forwardPos == currentPos && rotationPos == currentPos) {
+        return currentPos; // No movement
+    } else if (forwardPos == currentPos) {
+        return rotationPos;
+    } else if (rotationPos == currentPos) {
+        return forwardPos;
+    } else {
+        return (forwardPos + rotationPos) / 2; // Blend
+    }
+}
+
 void Animation::Strafe() {
     static int idleCount = 0;
     static const int idleThreshold = 100;
@@ -358,7 +370,7 @@ void Animation::Normal() {
             Vector3 currentPos = move.GetLegPosition(legNum);
             Vector3 forwardPos = cal.direction(0, controlPacket.joystick1Y, currentPos, legNum);
             Vector3 rotationPos = cal.direction(controlPacket.joystick1X, 0, currentPos, legNum, false, 1.0, false);
-            Vector3 targetPos = forwardPos + rotationPos / 2; // Average the two directions
+            Vector3 targetPos = BlendTargetPosition(currentPos, forwardPos, rotationPos);
             int size = 0;
             cal.GenerateBezierTrajectory(
                 gaitState.swingTrajectory[legNum].data(),
@@ -376,7 +388,7 @@ void Animation::Normal() {
             Vector3 currentPos = move.GetLegPosition(legNum);
             Vector3 forwardPos = cal.direction(0, controlPacket.joystick1Y, currentPos, legNum, true , strideMultiplier);
             Vector3 rotationPos = cal.direction(controlPacket.joystick1X, 0, currentPos, legNum, false, strideMultiplier, false);
-            Vector3 targetPos = forwardPos + rotationPos / 2; // Average the two directions
+            Vector3 targetPos = BlendTargetPosition(currentPos, forwardPos, rotationPos);
             int size = 0;
             cal.GenerateStraightTrajectory(
                 gaitState.stanceTrajectory[legNum].data(),
