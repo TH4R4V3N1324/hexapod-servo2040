@@ -246,6 +246,54 @@ double Animation::CalculateStrideMultiplier() {
     return (gaitState.config.size() > 1) ? 1.0 / (gaitState.config.size() - 1) : 1.0;
 }
 
+void Animation::GenerateTrajectories(
+    int liftHeight,
+    int resolution,
+    std::function<Vector3(int, const Vector3&)> swingTargetFunc,
+    std::function<Vector3(int, const Vector3&)> stanceTargetFunc
+) {
+    auto swingGroup = gaitState.config[gaitState.phase];
+    std::vector<int> stanceGroup;
+    for (int idx = 0; idx < gaitState.config.size(); ++idx) {
+        if (idx == gaitState.phase) continue;
+        for (int legNum : gaitState.config[idx])
+            stanceGroup.push_back(legNum);
+    }
+    for (int i = 1; i <= MAX_LEGS; ++i) {
+        gaitState.swingSizes[i] = 0;
+        gaitState.stanceSizes[i] = 0;
+    }
+    // Swing
+    for (int legNum : swingGroup) {
+        Vector3 currentPos = move.GetLegPosition(legNum);
+        Vector3 targetPos = swingTargetFunc(legNum, currentPos);
+        int size = 0;
+        cal.GenerateBezierTrajectory(
+            gaitState.swingTrajectory[legNum].data(),
+            size,
+            currentPos,
+            targetPos,
+            liftHeight,
+            resolution
+        );
+        gaitState.swingSizes[legNum] = size;
+    }
+    // Stance
+    for (int legNum : stanceGroup) {
+        Vector3 currentPos = move.GetLegPosition(legNum);
+        Vector3 targetPos = stanceTargetFunc(legNum, currentPos);
+        int size = 0;
+        cal.GenerateStraightTrajectory(
+            gaitState.stanceTrajectory[legNum].data(),
+            size,
+            currentPos,
+            targetPos,
+            resolution
+        );
+        gaitState.stanceSizes[legNum] = size;
+    }
+}
+
 void Animation::Strafe() {
     int liftHeight = 50;
     int resolution = 50;
@@ -262,52 +310,20 @@ void Animation::Strafe() {
 
     // Generate trajectories at the start of each phase
     if (gaitState.step == 0) {
-        auto swingGroup = gaitState.config[gaitState.phase];
-        std::vector<int> stanceGroup;
-
-        // Build stance group (all legs not in swing group)
-        for (int idx = 0; idx < gaitState.config.size(); ++idx) {
-            if (idx == gaitState.phase) continue;
-            for (int legNum : gaitState.config[idx])
-                stanceGroup.push_back(legNum);
-        }
-
-        // Clear sizes for all legs
-        for (int i = 1; i <= MAX_LEGS; ++i) {
-            gaitState.swingSizes[i] = 0;
-            gaitState.stanceSizes[i] = 0;
-        }
-
-        // Generate swing trajectories
-        for (int legNum : swingGroup) {
-            Vector3 currentPos = move.GetLegPosition(legNum);
+        GenerateTrajectories(
+        liftHeight,
+        resolution,
+        // Swing target
+        [this](int legNum, const Vector3& currentPos) {
             Vector3 targetPos = cal.direction(controlPacket.joystick1X, controlPacket.joystick1Y, currentPos, legNum);
-            int size = 0;
-            cal.GenerateBezierTrajectory(
-                gaitState.swingTrajectory[legNum].data(),
-                size,
-                currentPos,
-                targetPos,
-                liftHeight,
-                resolution
-            );
-            gaitState.swingSizes[legNum] = size;
-        }
-
-        // Generate stance trajectories
-        for (int legNum : stanceGroup) {
-            Vector3 currentPos = move.GetLegPosition(legNum);
+            return targetPos;
+        },
+        // Stance target
+        [this, strideMultiplier](int legNum, const Vector3& currentPos) {
             Vector3 targetPos = cal.direction(controlPacket.joystick1X, controlPacket.joystick1Y, currentPos, legNum, true, strideMultiplier);
-            int size = 0;
-            cal.GenerateStraightTrajectory(
-                gaitState.stanceTrajectory[legNum].data(),
-                size,
-                currentPos,
-                targetPos,
-                resolution
-            );
-            gaitState.stanceSizes[legNum] = size;
+            return targetPos;
         }
+        );
     }
 
     // Move all legs for this step
@@ -347,56 +363,24 @@ void Animation::Normal() {
 
     // Generate trajectories at the start of each phase
     if (gaitState.step == 0) {
-        auto swingGroup = gaitState.config[gaitState.phase];
-        std::vector<int> stanceGroup;
-
-        // Build stance group (all legs not in swing group)
-        for (int idx = 0; idx < gaitState.config.size(); ++idx) {
-            if (idx == gaitState.phase) continue;
-            for (int legNum : gaitState.config[idx])
-                stanceGroup.push_back(legNum);
-        }
-
-        // Clear sizes for all legs
-        for (int i = 1; i <= MAX_LEGS; ++i) {
-            gaitState.swingSizes[i] = 0;
-            gaitState.stanceSizes[i] = 0;
-        }
-
-        // Generate swing trajectories
-        for (int legNum : swingGroup) {
-            Vector3 currentPos = move.GetLegPosition(legNum);
+        GenerateTrajectories(
+        liftHeight,
+        resolution,
+        // Swing target
+        [this](int legNum, const Vector3& currentPos) {
             Vector3 forwardPos = cal.direction(0, controlPacket.joystick1Y, currentPos, legNum);
             Vector3 rotationPos = cal.direction(controlPacket.joystick1X, 0, currentPos, legNum, false, 1.0, false);
             Vector3 targetPos = BlendTargetPosition(currentPos, forwardPos, rotationPos);
-            int size = 0;
-            cal.GenerateBezierTrajectory(
-                gaitState.swingTrajectory[legNum].data(),
-                size,
-                currentPos,
-                targetPos,
-                liftHeight,
-                resolution
-            );
-            gaitState.swingSizes[legNum] = size;
-        }
-
-        // Generate stance trajectories
-        for (int legNum : stanceGroup) {
-            Vector3 currentPos = move.GetLegPosition(legNum);
+            return targetPos;
+        },
+        // Stance target
+        [this, strideMultiplier](int legNum, const Vector3& currentPos) {
             Vector3 forwardPos = cal.direction(0, controlPacket.joystick1Y, currentPos, legNum, true , strideMultiplier);
             Vector3 rotationPos = cal.direction(controlPacket.joystick1X, 0, currentPos, legNum, false, strideMultiplier, false);
             Vector3 targetPos = BlendTargetPosition(currentPos, forwardPos, rotationPos);
-            int size = 0;
-            cal.GenerateStraightTrajectory(
-                gaitState.stanceTrajectory[legNum].data(),
-                size,
-                currentPos,
-                targetPos,
-                resolution
-            );
-            gaitState.stanceSizes[legNum] = size;
+            return targetPos;
         }
+        );
     }
 
     // Move all legs for this step

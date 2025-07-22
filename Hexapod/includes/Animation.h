@@ -5,6 +5,7 @@
 #include "DataPacket.h"
 #include <stdio.h>
 #include <array>
+#include <functional>
 
 static constexpr int MAX_LEGS = 6;
 static constexpr int MAX_RESOLUTION = 50 + 1; // +1 for inclusive endpoint
@@ -41,6 +42,12 @@ private:
     bool HandleIdleReturn();
     void EnsureGaitConfig();
     double CalculateStrideMultiplier();
+    void GenerateTrajectories(
+        int liftHeight,
+        int resolution,
+        std::function<Vector3(int, const Vector3&)> swingTargetFunc,
+        std::function<Vector3(int, const Vector3&)> stanceTargetFunc
+    );
 
 public:
     enum Gait {GAIT_TRIPOD, GAIT_RIPPLE, GAIT_WAVE, NUM_GAITS};
