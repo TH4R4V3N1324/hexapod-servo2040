@@ -34,9 +34,14 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
     return {coxaAngle, femurAngle, tibiaAngle};
 };
 
-// Converts a leg position to the body frame based on the leg configuration
+// Converts a position from leg frame to body frame based on the leg configuration
 Vector3 Calculate::convertToBodyFrame(const Vector3& position, int legNum) {
     return position + legConfigs[legNum].translationOffset;
+}
+
+// Converts a position from body frame to leg frame based on the leg configuration
+Vector3 Calculate::convertToLegFrame(const Vector3& position, int legNum) {
+    return position - legConfigs[legNum].translationOffset;
 }
 
 //Calculates end position of a leg based on the current position and stride length
