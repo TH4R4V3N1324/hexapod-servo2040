@@ -160,6 +160,7 @@ void Animation::GenerateTrajectories(
     std::function<Vector3(int, const Vector3&)> swingTargetFunc,
     std::function<Vector3(int, const Vector3&)> stanceTargetFunc
 ) {
+    // Assign legs to their respective swing and stance groups
     auto swingGroup = gaitState.config[gaitState.phase];
     std::vector<int> stanceGroup;
     for (int idx = 0; idx < gaitState.config.size(); ++idx) {
@@ -171,31 +172,58 @@ void Animation::GenerateTrajectories(
         gaitState.swingSizes[i] = 0;
         gaitState.stanceSizes[i] = 0;
     }
-    // Swing
+
+    std::map<int, Vector3> swingTargetsBodyFrame;
+    std::map<int, Vector3> stanceTargetsBodyFrame;
+
+    // Calculate swing and stance targets in body frame
     for (int legNum : swingGroup) {
         Vector3 currentPos = move.GetLegPosition(legNum);
-        Vector3 targetPos = swingTargetFunc(legNum, currentPos);
+        Vector3 targetLegFrame = swingTargetFunc(legNum, currentPos);
+        Vector3 targetBodyFrame = cal.convertToBodyFrame(targetLegFrame, legNum);
+        swingTargetsBodyFrame[legNum] = targetBodyFrame;
+    }
+    for (int legNum : stanceGroup) {
+        Vector3 currentPos = move.GetLegPosition(legNum);
+        Vector3 targetLegFrame = stanceTargetFunc(legNum, currentPos);
+        Vector3 targetBodyFrame = cal.convertToBodyFrame(targetLegFrame, legNum);
+        stanceTargetsBodyFrame[legNum] = targetBodyFrame;
+    }
+
+    // Collision check and adjustment
+    double threshold = 50.0; // mm
+    for (int legNum : swingGroup) {
+        Vector3 swingTargetBody = swingTargetsBodyFrame[legNum];
+        for (const auto& [stanceNum, stanceTargetBody] : stanceTargetsBodyFrame) {
+            if ((swingTargetBody - stanceTargetBody).length() < threshold) {
+                // Clamp swingTargetBody outward
+                Vector3 dir = (swingTargetBody - stanceTargetBody).normalized();
+                swingTargetBody = stanceTargetBody + dir * threshold;
+            }
+        }
+        // Convert back to leg frame
+        Vector3 targetLegFrame = cal.convertToLegFrame(swingTargetBody, legNum);
         int size = 0;
         cal.GenerateBezierTrajectory(
             gaitState.swingTrajectory[legNum].data(),
             size,
-            currentPos,
-            targetPos,
+            move.GetLegPosition(legNum),
+            targetLegFrame,
             liftHeight,
             resolution
         );
         gaitState.swingSizes[legNum] = size;
     }
+
     // Stance
     for (int legNum : stanceGroup) {
-        Vector3 currentPos = move.GetLegPosition(legNum);
-        Vector3 targetPos = stanceTargetFunc(legNum, currentPos);
+        Vector3 targetLegFrame = cal.convertToLegFrame(stanceTargetsBodyFrame[legNum], legNum);
         int size = 0;
         cal.GenerateStraightTrajectory(
             gaitState.stanceTrajectory[legNum].data(),
             size,
-            currentPos,
-            targetPos,
+            move.GetLegPosition(legNum),
+            targetLegFrame,
             resolution
         );
         gaitState.stanceSizes[legNum] = size;
