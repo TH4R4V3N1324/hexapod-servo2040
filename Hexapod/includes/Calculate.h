@@ -8,11 +8,6 @@
 #include "DataPacket.h"
 #include "ConfigManager.h"
 
-struct LegConfig {
-    double rotationAngle;
-    bool isMirrored;
-};
-
 struct Vector3 {
     double x;
     double y;
@@ -59,6 +54,12 @@ struct Vector3 {
     }
 };
 
+struct LegConfig {
+    double rotationAngle;
+    bool isMirrored;
+    Vector3 translationOffset;
+};
+
 struct JointAngles {
     double coxaAngle;
     double femurAngle;
@@ -80,15 +81,16 @@ public:
     void GenerateBezierTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
     JointAngles angle(Vector3 position, int legNum);
     Vector3 direction(const int16_t& joystickValueX, const int16_t& joystickValueY, const Vector3& start, int legNum, bool invert = false, double strideMultiplier = 1.0, bool useBodyFrame = true);
+    Vector3 convertToBodyFrame(const Vector3& position, int legNum);
     std::map<int, LegConfig> legConfigs;
 
     Calculate() {
-        legConfigs[1] = {30 * pi / 180, false};
-        legConfigs[2] = {0, false};
-        legConfigs[3] = {-30 * pi / 180, false};
-        legConfigs[4] = {-30 * pi / 180, true};
-        legConfigs[5] = {0, true};
-        legConfigs[6] = {30 * pi / 180, true};
+        legConfigs[1] = {30 * pi / 180, false, Vector3(67.33, 84.6, 0)};
+        legConfigs[2] = {0, false, Vector3(90, 0, 0)};
+        legConfigs[3] = {-30 * pi / 180, false, Vector3(67.33, -84.6, 0)};
+        legConfigs[4] = {-30 * pi / 180, true, Vector3(-67.33, -84.6, 0)};
+        legConfigs[5] = {0, true, Vector3(-90, 0, 0)};
+        legConfigs[6] = {30 * pi / 180, true, Vector3(-67.33, 84.6, 0)};
     }
 };
 

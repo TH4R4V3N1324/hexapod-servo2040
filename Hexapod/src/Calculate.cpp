@@ -34,6 +34,11 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
     return {coxaAngle, femurAngle, tibiaAngle};
 };
 
+// Converts a leg position to the body frame based on the leg configuration
+Vector3 Calculate::convertToBodyFrame(const Vector3& position, int legNum) {
+    return position + legConfigs[legNum].translationOffset;
+}
+
 //Calculates end position of a leg based on the current position and stride length
 Vector3 Calculate::direction(const int16_t& joystickValueX, const int16_t& joystickValueY, const Vector3& start, int legNum, bool invert, double strideMultiplier, bool useBodyFrame) {
     const double maxStride = 60.0;
@@ -136,6 +141,7 @@ void Calculate::GenerateStraightTrajectory(Vector3* trajectory, int& outSize, co
     outSize = resolution + 1;
 }
 
+// Generates a Bezier trajectory between the start and end position
 void Calculate::GenerateBezierTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert) {
     outSize = 0;
     if (resolution <= 0 || resolution > 10000) {
