@@ -74,11 +74,13 @@ void Move::Deactivate(int legNum){
     cluster.disable(Servos.tibia);
 };
 
-// Sets leg joint to specific angle
-void Move::Joint(int legNum, int joint, double angle) {
+// Sets leg angles to specific values
+void Move::Angles(const JointAngles& angles, int legNum) {
     LegServo Servos = legs.at(legNum);
-    int legJoints[3] = {Servos.coxa, Servos.femur, Servos.tibia};
-    if (joint >= 0 && joint < 3) {
-        cluster.value(legJoints[joint], angle);
-    }
+    cluster.value(Servos.coxa, angles.coxaAngle);
+    cluster.value(Servos.femur, angles.femurAngle);
+    cluster.value(Servos.tibia, angles.tibiaAngle);
+
+    Calculate::legPosition[legNum].angles = angles;
+    Calculate::legPosition[legNum].position = Cal.position(angles, legNum);
 }
