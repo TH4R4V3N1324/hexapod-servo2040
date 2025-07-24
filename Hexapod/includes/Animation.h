@@ -16,7 +16,6 @@ struct GaitState {
     std::array<std::array<Vector3, MAX_RESOLUTION>, MAX_LEGS + 1> stanceTrajectory;
     std::array<int, MAX_LEGS + 1> swingSizes{};   // Store actual size for each leg
     std::array<int, MAX_LEGS + 1> stanceSizes{};
-    int phase = 0;
     int step = 0;
     bool idleReturning = false;
 };
@@ -51,10 +50,7 @@ private:
     void PerformLegStep(bool stickIdle, int resolution, bool handlePhaseTransition = true);
 
 public:
-    Gait currentGait;
     Gait pendingGait;
-    Mode currentMode;
-    Animation() : currentGait(GAIT_TRIPOD), currentMode(MODE_NORMAL) {}
     std::vector<std::vector<int>> GetLegConfig(Gait gait);
     void CycleGait();
     void SetGait(Gait gait);

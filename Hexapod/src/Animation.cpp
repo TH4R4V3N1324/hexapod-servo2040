@@ -20,7 +20,7 @@ std::vector<std::vector<int>> Animation::GetLegConfig(Gait gait){
 
 // Changes to the next gait when called
 void Animation::CycleGait(){
-    pendingGait = static_cast<Gait>((currentGait + 1) % NUM_GAITS);
+    pendingGait = static_cast<Gait>((hexPacket.currentGait + 1) % NUM_GAITS);
     gaitChangeRequested = true;
 }
 
@@ -32,12 +32,12 @@ void Animation::SetGait(Gait gait) {
 
 // Changes to the next mode when called
 void Animation::CycleMode() {
-    currentMode = static_cast<Mode>((currentMode + 1) % NUM_MODES);
+    hexPacket.currentMode = static_cast<Mode>((hexPacket.currentMode + 1) % NUM_MODES);
 }
 
 // Changes to given mode
 void Animation::SetMode(Mode mode) {
-    currentMode = mode;
+    hexPacket.currentMode = mode;
 }
 
 // Changes currentHeight to new height and updates startPosition
@@ -144,7 +144,7 @@ bool Animation::HandleIdleReturn() {
 // Ensures the gait configuration is set up correctly
 void Animation::EnsureGaitConfig() {
     if (gaitState.config.empty()) {
-        gaitState.config = GetLegConfig(currentGait);
+        gaitState.config = GetLegConfig(hexPacket.currentGait);
     }
 }
 
@@ -161,10 +161,10 @@ void Animation::GenerateTrajectories(
     std::function<Vector3(int, const Vector3&)> stanceTargetFunc
 ) {
     // Assign legs to their respective swing and stance groups
-    auto swingGroup = gaitState.config[gaitState.phase];
+    auto swingGroup = gaitState.config[hexPacket.currentPhase];
     std::vector<int> stanceGroup;
     for (int idx = 0; idx < gaitState.config.size(); ++idx) {
-        if (idx == gaitState.phase) continue;
+        if (idx == hexPacket.currentPhase) continue;
         for (int legNum : gaitState.config[idx])
             stanceGroup.push_back(legNum);
     }
@@ -246,7 +246,7 @@ void Animation::PerformLegStep(bool stickIdle, int resolution, bool handlePhaseT
 
     // Phase transition
     if (gaitState.step > resolution) {
-        gaitState.phase = (gaitState.phase + 1) % gaitState.config.size();
+        hexPacket.currentPhase = (hexPacket.currentPhase + 1) % gaitState.config.size();
         gaitState.step = 0;
     }    
 }
@@ -259,9 +259,9 @@ void Animation::returnToStart() {
     int resolution = 50;
 
     // Safety check: phase must be valid
-    if (gaitState.phase >= gaitState.config.size()) {
-        std::cerr << "[returnToStart] ERROR: Invalid gaitState.phase: "
-                  << gaitState.phase << ", config size: "
+    if (hexPacket.currentPhase >= gaitState.config.size()) {
+        std::cerr << "[returnToStart] ERROR: Invalid hexPacket.currentPhase: "
+                  << hexPacket.currentPhase << ", config size: "
                   << gaitState.config.size() << std::endl;
         gaitState.idleReturning = false;
         counter = 0;
@@ -293,7 +293,7 @@ void Animation::returnToStart() {
     if (gaitState.step > resolution) {
         counter++;
         gaitState.step = 0;
-        gaitState.phase = (gaitState.phase + 1) % gaitState.config.size();
+        hexPacket.currentPhase = (hexPacket.currentPhase + 1) % gaitState.config.size();
 
         // After all phases, finish return-to-start and handle gait change if requested
         if (counter > gaitState.config.size()) {
@@ -302,9 +302,9 @@ void Animation::returnToStart() {
             trajectoryGenerated = false;
 
             if (gaitChangeRequested) {
-                currentGait = pendingGait;
-                gaitState.config = GetLegConfig(currentGait);
-                gaitState.phase = 0;
+                hexPacket.currentGait = pendingGait;
+                gaitState.config = GetLegConfig(hexPacket.currentGait);
+                hexPacket.currentPhase = 0;
                 gaitState.step = 0;
                 gaitChangeRequested = false;
             }

@@ -25,7 +25,7 @@ void CommandFSM() {
 }
 
 void StateFSM() {
-    switch (animation.currentMode) {
+    switch (hexPacket.currentMode) {
         case MODE_NORMAL:
             animation.Normal();
             break;
