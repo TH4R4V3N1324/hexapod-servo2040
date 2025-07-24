@@ -89,6 +89,7 @@ public:
     Vector3 direction(const int16_t& joystickValueX, const int16_t& joystickValueY, const Vector3& start, int legNum, bool invert = false, double strideMultiplier = 1.0, bool useBodyFrame = true);
     Vector3 convertToBodyFrame(const Vector3& position, int legNum);
     Vector3 convertToLegFrame(const Vector3& position, int legNum);
+    JointAngles ApplyOffsets(JointAngles& angles, int legNum);
     std::map<int, LegConfig> legConfigs;
 
     Calculate() {

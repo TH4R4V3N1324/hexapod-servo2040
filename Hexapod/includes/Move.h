@@ -56,7 +56,7 @@ public:
     void Position(const Vector3& position, int legNum);
     void Deactivate(int legNum);
     float GetCurrentDraw();
-    void Angles(const JointAngles& angles, int legNum);
+    void Angles(JointAngles& angles, int legNum);
 };
 
 #endif 

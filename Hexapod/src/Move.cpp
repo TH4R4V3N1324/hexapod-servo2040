@@ -56,6 +56,9 @@ void Move::Position(const Vector3& position, int legNum){
     LegServo Servos = legs.at(legNum);
     JointAngles angles = Cal.angle(position, legNum);
 
+    // Apply offsets to angles
+    angles = Cal.ApplyOffsets(angles, legNum);
+
     // Assign angles to servos directly (assuming 3 servos per leg)
     cluster.value(Servos.coxa, angles.coxaAngle);
     cluster.value(Servos.femur, angles.femurAngle);
@@ -75,7 +78,11 @@ void Move::Deactivate(int legNum){
 };
 
 // Sets leg angles to specific values
-void Move::Angles(const JointAngles& angles, int legNum) {
+void Move::Angles(JointAngles& angles, int legNum) {
+    // Apply offsets to angles
+    angles = Cal.ApplyOffsets(angles, legNum);
+
+    // Assign angles to servos directly (assuming 3 servos per leg)
     LegServo Servos = legs.at(legNum);
     cluster.value(Servos.coxa, angles.coxaAngle);
     cluster.value(Servos.femur, angles.femurAngle);
