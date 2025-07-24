@@ -34,6 +34,15 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
     return {coxaAngle, femurAngle, tibiaAngle};
 };
 
+// Forward kinematics, calculates the position based on joint angles
+Vector3 Calculate::position(JointAngles angles, int legNum) {
+    Vector3 position;
+    position.x = coxaLength * cos(angles.coxaAngle) + femurLength * cos(angles.coxaAngle) * cos(angles.femurAngle) + tibiaLength * cos(angles.coxaAngle) * cos(angles.femurAngle + angles.tibiaAngle);
+    position.y = coxaLength * sin(angles.coxaAngle) + femurLength * sin(angles.coxaAngle) * cos(angles.femurAngle) + tibiaLength * sin(angles.coxaAngle) * cos(angles.femurAngle + angles.tibiaAngle);
+    position.z = femurLength * sin(angles.femurAngle) + tibiaLength * sin(angles.femurAngle + angles.tibiaAngle);
+    return position;
+}
+
 // Converts a position from leg frame to body frame based on the leg configuration
 Vector3 Calculate::convertToBodyFrame(const Vector3& position, int legNum) {
     return position + legConfigs[legNum].translationOffset;
