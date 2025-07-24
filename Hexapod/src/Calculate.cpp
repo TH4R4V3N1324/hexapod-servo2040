@@ -1,7 +1,7 @@
 #include "Calculate.h"
 using namespace std;
 
-unordered_map<int, Vector3> Calculate::legPosition;
+unordered_map<int, LegPosition> Calculate::legPosition;
 
 //inverse kinematics, returns the angles needed to move to position
 JointAngles Calculate::angle(Vector3 position, int legNum){

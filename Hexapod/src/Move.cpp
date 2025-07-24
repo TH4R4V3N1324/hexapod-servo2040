@@ -45,7 +45,7 @@ bool Move::AllLegsGrounded(){
 //returns leg position found in legPosition if it exists
 Vector3 Move::GetLegPosition(int legNum) const{
     if (Calculate::legPosition.find(legNum) != Calculate::legPosition.end()) {
-        return Calculate::legPosition.at(legNum);
+        return Calculate::legPosition.at(legNum).position;
     } else {
         return {};
     }
@@ -61,7 +61,8 @@ void Move::Position(const Vector3& position, int legNum){
     cluster.value(Servos.femur, angles.femurAngle);
     cluster.value(Servos.tibia, angles.tibiaAngle);
 
-    Calculate::legPosition[legNum] = position;
+    Calculate::legPosition[legNum].position = position;
+    Calculate::legPosition[legNum].angles = angles;
 };
 
 //turns the servos off in a given leg

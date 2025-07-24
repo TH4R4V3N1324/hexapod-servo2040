@@ -66,6 +66,11 @@ struct JointAngles {
     double tibiaAngle;
 };
 
+struct LegPosition {
+    Vector3 position;
+    JointAngles angles;
+};
+
 class Calculate {
 private:
     static constexpr double coxaLength = 50.50;
@@ -75,7 +80,7 @@ private:
 
 public:
     ConfigManager configManager;
-    static std::unordered_map<int, Vector3> legPosition;
+    static std::unordered_map<int, LegPosition> legPosition;
     void GenerateArcTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
     void GenerateStraightTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int resolution);
     void GenerateBezierTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
