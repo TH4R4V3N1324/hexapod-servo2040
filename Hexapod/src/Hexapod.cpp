@@ -5,10 +5,10 @@ Animation animation;
 void CommandFSM() {
     switch (controlPacket.command) {
         case CMD_SET_GAIT:
-            animation.SetGait(static_cast<Animation::Gait>(controlPacket.commandArgs[0]));
+            animation.SetGait(static_cast<Gait>(controlPacket.commandArgs[0]));
             break;
         case CMD_SET_MODE:
-            animation.SetMode(static_cast<Animation::Mode>(controlPacket.commandArgs[0]));
+            animation.SetMode(static_cast<Mode>(controlPacket.commandArgs[0]));
             break;
         case CMD_SET_CONFIG:
             configManager.SetLegConfig(controlPacket.commandArgs[0], controlPacket.commandArgs[1], controlPacket.commandArgs[2]);
@@ -26,15 +26,15 @@ void CommandFSM() {
 
 void StateFSM() {
     switch (animation.currentMode) {
-        case Animation::MODE_NORMAL:
+        case MODE_NORMAL:
             animation.Normal();
             break;
-        case Animation::MODE_STRAFE:
+        case MODE_STRAFE:
             animation.Strafe();
             break;
-        case Animation::MODE_TILT:
+        case MODE_TILT:
             break;
-        case Animation::MODE_CONFIG:
+        case MODE_CONFIG:
             animation.ConfigState();
             break;
         default:

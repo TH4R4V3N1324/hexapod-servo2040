@@ -51,11 +51,9 @@ private:
     void PerformLegStep(bool stickIdle, int resolution, bool handlePhaseTransition = true);
 
 public:
-    enum Gait {GAIT_TRIPOD, GAIT_RIPPLE, GAIT_WAVE, NUM_GAITS};
-    enum Mode {MODE_NORMAL, MODE_STRAFE, MODE_TILT, MODE_CONFIG, NUM_MODES};
-    Animation::Gait currentGait;
-    Animation::Gait pendingGait;
-    Animation::Mode currentMode;
+    Gait currentGait;
+    Gait pendingGait;
+    Mode currentMode;
     Animation() : currentGait(GAIT_TRIPOD), currentMode(MODE_NORMAL) {}
     std::vector<std::vector<int>> GetLegConfig(Gait gait);
     void CycleGait();

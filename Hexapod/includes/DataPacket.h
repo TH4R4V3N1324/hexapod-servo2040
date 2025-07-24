@@ -12,6 +12,21 @@
 #define SDA_PIN 20
 #define SCL_PIN 21
 
+enum Gait : uint8_t {
+    GAIT_TRIPOD,
+    GAIT_RIPPLE,
+    GAIT_WAVE,
+    NUM_GAITS
+};
+
+enum Mode : uint8_t {
+    MODE_NORMAL,
+    MODE_STRAFE,
+    MODE_TILT,
+    MODE_CONFIG,
+    NUM_MODES
+};
+
 enum Command : uint8_t {
     CMD_NONE = 0,
     CMD_SET_GAIT,
@@ -38,9 +53,9 @@ struct ControlPacket {
 struct HexPacket {
     int16_t legConfigs[3];
     int16_t currentHeight;
-    int16_t currentPhase;
-    int16_t currentGait;
-    int16_t currentMode;
+    int8_t currentPhase;
+    Gait currentGait;
+    Mode currentMode;
 };
 #pragma pack(pop)
 
