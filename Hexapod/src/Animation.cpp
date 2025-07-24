@@ -66,12 +66,17 @@ void Animation::Shutdown() {
 // Move to home position for all legs
 void Animation::Startup() {
     static bool initialized = false;
+    int resolution = 50;
 
     if(!initialized){
         Shutdown();
         initialized = true;
     }
 
+    // Reset phase to 0 when starting up
+    hexPacket.currentPhase = 0;
+
+    // Update start position based on current height
     startPos = Vector3{0, 130, -static_cast<double>(hexPacket.currentHeight)};
     startPosition = {
         {1, startPos.rotate(-15)},
@@ -81,9 +86,19 @@ void Animation::Startup() {
         {5, startPos},
         {6, startPos.rotate(-15)}
     };
-    
-    for(size_t i = 1; i <= 6; ++i){
-        move.Position(startPosition.at(i), i);
+
+    // Generate trajectories for each leg to move to home position
+    std::array<std::array<Vector3, MAX_RESOLUTION>, MAX_LEGS + 1> trajectory;
+    std::array<int, MAX_LEGS + 1> sizes{};
+    for (int leg = 1; leg <= MAX_LEGS; ++leg) {
+        cal.GenerateStraightTrajectory(trajectory[leg].data(), sizes[leg], homePos, startPosition.at(leg), resolution);
+    }
+    for (int step = 0; step < resolution; ++step) {
+        for (int leg = 1; leg <= MAX_LEGS; ++leg) {
+            if (step < sizes[leg]) {
+                move.Position(trajectory[leg][step], leg);
+            }
+        }
     }
 }
 
