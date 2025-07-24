@@ -312,6 +312,14 @@ void Animation::returnToStart() {
     }
 }
 
+// Handles the configuration state for the hexapod
+void Animation::ConfigState() {
+    JointAngles angles = {0, 90, 0}; // Default angles for configuration state
+    for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
+        move.Angles(angles, legNum);
+    }
+}
+
 void Animation::Strafe() {
     int liftHeight = 50;
     int resolution = 50;

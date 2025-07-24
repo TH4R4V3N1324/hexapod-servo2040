@@ -36,6 +36,7 @@ void StateFSM() {
         case Animation::MODE_TILT:
             break;
         case Animation::MODE_CONFIG:
+            animation.ConfigState();
             break;
         default:
             break;

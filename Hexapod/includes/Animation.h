@@ -68,6 +68,7 @@ public:
     void Strafe();
     void returnToStart();
     void Normal();
+    void ConfigState();
 };
 
 #endif 
