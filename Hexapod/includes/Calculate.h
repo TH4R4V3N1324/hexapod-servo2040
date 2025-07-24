@@ -79,7 +79,6 @@ private:
     const double pi = acos(-1.0);
 
 public:
-    ConfigManager configManager;
     static std::unordered_map<int, LegPosition> legPosition;
     void GenerateArcTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int liftHeight, int resolution, bool invert = false);
     void GenerateStraightTrajectory(Vector3* trajectory, int& outSize, const Vector3& start, const Vector3& end, int resolution);

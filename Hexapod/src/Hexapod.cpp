@@ -1,7 +1,6 @@
 #include "Hexapod.h"
 
 Animation animation;
-ConfigManager configManager;
 
 void CommandFSM() {
     switch (controlPacket.command) {

@@ -1,5 +1,7 @@
 #include "ConfigManager.h"
 
+ConfigManager configManager;
+
 // Definition of static member
 int16_t ConfigManager::jointOffsets[6][3] = {};
 

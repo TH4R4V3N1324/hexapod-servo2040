@@ -18,4 +18,6 @@ class ConfigManager {
         const int16_t* getLegOffsets(int legNum) const;
 };
 
+extern ConfigManager configManager;
+
 #endif
