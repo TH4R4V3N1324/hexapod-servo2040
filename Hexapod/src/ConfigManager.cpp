@@ -1,3 +1,5 @@
+
+#include <cstdio>
 #include "ConfigManager.h"
 
 ConfigManager configManager;
@@ -19,8 +21,13 @@ void ConfigManager::loadLegOffsets() {
 
 // Change offsets for leg
 void ConfigManager::SetLegConfig(int legNum, int joint, int offset) {
+    // Clamp offset to safe range
+    if (offset > 60) offset = 60;
+    if (offset < -60) offset = -60;
     jointOffsets[legNum][joint] = offset;
     saveLegOffsets();
+    // Optional: print for debug
+    printf("[ConfigManager] SetLegConfig: leg %d, joint %d, offset %d\n", legNum, joint, offset);
 }
 
 // Returns the offsets for a given leg
