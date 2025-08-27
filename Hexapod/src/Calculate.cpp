@@ -30,10 +30,23 @@ JointAngles Calculate::angle(Vector3 position, int legNum){
 
 // Forward kinematics, calculates the position based on joint angles
 Vector3 Calculate::position(JointAngles angles, int legNum) {
-    Vector3 position;
-    position.x = coxaLength * cos(angles.coxaAngle) + femurLength * cos(angles.coxaAngle) * cos(angles.femurAngle) + tibiaLength * cos(angles.coxaAngle) * cos(angles.femurAngle + angles.tibiaAngle);
-    position.y = coxaLength * sin(angles.coxaAngle) + femurLength * sin(angles.coxaAngle) * cos(angles.femurAngle) + tibiaLength * sin(angles.coxaAngle) * cos(angles.femurAngle + angles.tibiaAngle);
-    position.z = femurLength * sin(angles.femurAngle) + tibiaLength * sin(angles.femurAngle + angles.tibiaAngle);
+    // Convert angles from degrees to radians
+    angles.coxaAngle *= M_PI / 180.0;
+    angles.femurAngle *= M_PI / 180.0;
+    angles.tibiaAngle *= M_PI / 180.0;
+
+    // Calculate the position based on the angles
+    double r1 = femurLength * sin(angles.femurAngle);
+    double r2 = femurLength * cos(angles.femurAngle);
+    double r3 = tibiaLength * sin(angles.femurAngle + angles.tibiaAngle);
+    double r4 = tibiaLength * cos(angles.femurAngle + angles.tibiaAngle);
+    double z = r1 + r3 + coxaLength;
+    double r5 = r2 + r4;
+    double x = r5 * sin(angles.coxaAngle);
+    double y = r5 * cos(angles.coxaAngle);
+
+    Vector3 position = {x, y, z};
+
     return position;
 }
 
