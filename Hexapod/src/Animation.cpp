@@ -329,9 +329,25 @@ void Animation::returnToStart() {
 
 // Handles the configuration state for the hexapod
 void Animation::ConfigState() {
-    JointAngles angles = {0, 90, 0}; // Default angles for configuration state
+    JointAngles angles = {0, 0, 0}; // Default angles for configuration state
+    int resolution = 50;
+    std::array<std::array<Vector3, MAX_RESOLUTION>, MAX_LEGS + 1> trajectory;
+    std::array<int, MAX_LEGS + 1> sizes{};
+
+    // Generate trajectories for each leg
     for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
-        move.Angles(angles, legNum);
+        Vector3 currentPos = move.GetLegPosition(legNum);
+        Vector3 targetPos = cal.position(angles, legNum);
+        cal.GenerateStraightTrajectory(trajectory[legNum].data(), sizes[legNum], currentPos, targetPos, resolution);
+    }
+
+    // Interpolate movement
+    for (int step = 0; step < resolution; ++step) {
+        for (int legNum = 1; legNum <= MAX_LEGS; ++legNum) {
+            if (step < sizes[legNum]) {
+                move.Position(trajectory[legNum][step], legNum);
+            }
+        }
     }
 }
 
