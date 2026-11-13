@@ -38,6 +38,7 @@ const char* levelName(gait_core::LogLevel level) {
         case gait_core::LogLevel::Debug: return "DEBUG";
         case gait_core::LogLevel::Info: return "INFO";
         case gait_core::LogLevel::Warn: return "WARN";
+        case gait_core::LogLevel::Error: return "ERROR";
     }
     return "";
 }
@@ -45,16 +46,29 @@ const char* levelName(gait_core::LogLevel level) {
 }  // namespace
 
 GaitController::GaitController(Servos& servos)
-    : servos(servos), engine(robot::gaitParams(), robot::geometry()) {
+    : servos(servos), engine(robot::gaitParams(), robot::geometry()), battery(1, robot::batteryParams()) {
     engine.log = [](gait_core::LogLevel level, const char* message) {
         printf("[gait %s] %s\n", levelName(level), message);
     };
     engine.seatedChanged = [](bool seated) {
         printf("[gait] %s\n", seated ? "seated" : "standing");
     };
+    battery.log = [](gait_core::LogLevel level, const char* message) {
+        printf("[battery %s] %s\n", levelName(level), message);
+    };
 }
 
 void GaitController::begin() {
+    seatLegs();
+}
+
+/**
+ * @brief Put each leg in the seated pose in turn, starting its servos, and tell the engine that's
+ *        where they are
+ * @note Blocks for NUM_LEGS * BOOT_LEG_STAGGER_MS. The joint state sent here is the only one the
+ *       engine gets: from here on it runs open loop.
+*/
+void GaitController::seatLegs() {
     const gait_core::GaitParams& p = engine.params();
     const gait_core::KinematicSolver ik(robot::geometry());
     const gait_core::JointAngles seated = ik.solveIK(gait_core::Vec3(p.sit_reach, 0, -p.sit_height));
@@ -68,8 +82,48 @@ void GaitController::begin() {
         feedback.present[legNum] = true;
     }
     feedback.stamp = static_cast<gait_core::Timestamp>(time_us_64()) * 1000;
-    // The only joint state the engine gets: from here on it runs open loop
     engine.onJointStates(feedback);
+    servosPowered = true;
+}
+
+/**
+ * @brief Start or stop the servos when the engine's servo power changes
+ * @note The engine turns power on with a stand command and waits for joint states; the legs have been
+ *       limp meanwhile, so they're put back in the seated pose first, as at boot.
+*/
+void GaitController::followServoPower(bool power) {
+    if (power && !servosPowered) {
+        printf("[servos] on\n");
+        seatLegs();
+    } else if (!power && servosPowered) {
+        servos.disableAll();
+        servosPowered = false;
+        configMode = false;
+        blending = false;
+        printf("[servos] off: send a stand command to start them again\n");
+    }
+}
+
+/**
+ * @brief Act on the battery monitor's decisions: sit down, and stop the servos, at critical
+*/
+void GaitController::updateBattery(uint64_t nowUs) {
+    if (!robot::BATTERY_MONITORING) {
+        return;
+    }
+    const hexapod_behaviour::BatteryStatus status = battery.update(static_cast<gait_core::Timestamp>(nowUs) * 1000);
+    if (status.sit) {
+        const gait_core::CommandResult result = status.powerOff ? engine.powerDown() : engine.sit(true);
+        if (!result.success) {
+            printf("[battery] couldn't sit down: %s\n", result.message);
+        }
+        battery.sitRequested();
+    }
+}
+
+void GaitController::onPower(float voltage, float current, uint64_t nowUs) {
+    // BatteryMonitor counts discharge current as negative
+    battery.onReading(0, voltage, -current, static_cast<gait_core::Timestamp>(nowUs) * 1000);
 }
 
 void GaitController::handleCommand(const ControlPacket& packet) {
@@ -85,7 +139,9 @@ void GaitController::handleCommand(const ControlPacket& packet) {
 
         case CMD_SET_MODE:
             if (args[0] == MODE_CONFIG) {
-                if (!configMode) {
+                if (!servosPowered) {
+                    printf("Ignored MODE_CONFIG: the servos are off\n");
+                } else if (!configMode) {
                     // Out of tilt mode first, so the engine eases the body back to neutral meanwhile
                     engine.setMode(gait_core::MODE_NORMAL);
                     configMode = true;
@@ -123,6 +179,10 @@ void GaitController::handleCommand(const ControlPacket& packet) {
             engine.sit(args[0] != 0);
             break;
 
+        case CMD_POWER_DOWN:
+            engine.powerDown();
+            break;
+
         case CMD_NONE:
         default:
             break;
@@ -131,8 +191,8 @@ void GaitController::handleCommand(const ControlPacket& packet) {
 
 /**
  * @brief Turn the sticks into a velocity command (or a body pose in tilt mode)
- * @note Sticks: X positive is right, Y positive is forward. Left stick drives, right stick X turns,
- *       as hexapod-ros2's controller_teleop. In normal mode the engine turns with the left stick's
+ * @note Sticks: X positive is right, Y positive is forward. Left stick drives, right stick X turns.
+ *       In normal mode the engine turns with the left stick's
  *       X instead of strafing. In tilt mode the left stick shifts the body and the right stick
  *       rolls and pitches it.
 */
@@ -153,7 +213,7 @@ void GaitController::applySticks(const ControlPacket& packet, bool commsOk) {
                            0,
                            gait_core::Vec3(ly, -lx, 0) * p.tilt_max_translation);
     } else {
-        // Full stick is the gait's top speed, as GetCapabilities reports it to controller_teleop
+        // Full stick is the gait's top speed
         const Scalar maxLinear = engine.maxFootSpeed();
         const Scalar maxAngular = maxLinear / engine.trajectory().maxBodyRadius();
         command.vx = ly * maxLinear;
@@ -161,7 +221,7 @@ void GaitController::applySticks(const ControlPacket& packet, bool commsOk) {
         command.wz = -rx * maxAngular;
     }
 
-    // Smoothed like hexapod-ros2's cmd_vel; a stop goes straight through
+    // Smoothed; a stop goes straight through
     if (command.vx == 0 && command.vy == 0 && command.wz == 0) {
         filteredVelocity = command;
     } else {
@@ -191,8 +251,12 @@ void GaitController::update(Scalar dt, uint64_t nowUs, const ControlPacket& pack
     if (commsOk) {
         applyHeight(packet.currentHeight);
     }
+    updateBattery(nowUs);
     const gait_core::GaitOutput output = engine.update(dt, static_cast<gait_core::Timestamp>(nowUs) * 1000);
-    writeServos(output, dt);
+    followServoPower(output.servoPower);
+    if (servosPowered) {
+        writeServos(output, dt);
+    }
 }
 
 void GaitController::onImu(float roll, float pitch, float yaw, uint64_t nowUs) {

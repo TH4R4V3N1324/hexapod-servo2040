@@ -21,7 +21,7 @@ void MadgwickFilter::update(const float gyro[3], const float accel[3], float dt)
     float ax = accel[0], ay = accel[1], az = accel[2];
     const bool hasAccel = !(ax == 0.0f && ay == 0.0f && az == 0.0f);
 
-    // First reading: roll and pitch straight from gravity, yaw 0 (as imu_filter_madgwick starts)
+    // First reading: roll and pitch straight from gravity, yaw 0
     if (!initialised) {
         if (!hasAccel) {
             return;

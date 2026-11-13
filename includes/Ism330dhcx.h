@@ -16,8 +16,7 @@ struct ImuReading {
 
 /**
  * @brief I2C driver for the ISM330DHCX IMU (accelerometer + gyroscope)
- * @note Port of hexapod-ros2's hexapod_hardware_interface::Ism330dhcx to the Pico SDK. Also accepts
- *       the older ISM330DLC, which shares the register layout.
+ * @note Also accepts the older ISM330DLC, which shares the register layout.
 */
 class Ism330dhcx {
 public:

@@ -6,6 +6,7 @@ include(${PIMORONI_PICO_PATH}/drivers/button/button.cmake)
 include(${PIMORONI_PICO_PATH}/drivers/analogmux/analogmux.cmake)
 include(${PIMORONI_PICO_PATH}/drivers/analog/analog.cmake)
 
-# Gait maths shared with hexapod-ros2 (float Scalars, bundled Eigen since this is a cross build)
+# Gait and behaviours shared with hexapod-ros2 (float Scalars, bundled Eigen since this is a cross
+# build): gait_core::gait_core and gait_core::behaviour
 add_subdirectory(hexapod-gait-core)
 target_compile_definitions(gait_core PUBLIC EIGEN_NO_DEBUG)

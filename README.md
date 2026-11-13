@@ -1,11 +1,10 @@
 # hexapod-servo2040
 
-Embedded control firmware for the Explorer hexapod on a Pimoroni Servo 2040 (RP2040). It is the
-embedded counterpart of [hexapod-ros2](https://github.com/TH4R4V3N1324/hexapod-ros2): the same
-geometry and control scheme, from the same [hexapod-gait-core](https://github.com/TH4R4V3N1324/hexapod-gait-core)
-library, driving 18 hobby PWM servos and taking commands from an ESP32 over I²C.
+Control firmware for the Explorer hexapod on a Pimoroni Servo 2040 (RP2040). It runs the gait
+from [hexapod-gait-core](https://github.com/TH4R4V3N1324/hexapod-gait-core), drives 18 hobby PWM
+servos, and takes commands from an ESP32 over I²C.
 
-The robot, its build, and how the stacks fit together are documented in
+The robot and its build are documented in
 [hexapod-docs](https://github.com/TH4R4V3N1324/hexapod-docs). This README only covers building
 and working on the firmware.
 
@@ -42,13 +41,13 @@ each leg in turn into the seated pose, then stands up.
 includes/, src/
   Hexapod            Entry point and 100 Hz control loop
   RobotConfig.h      Explorer geometry, GaitParams, joint-to-servo mapping, timings, IMU settings
-  GaitController     ESP32 packets → GaitEngine inputs; engine output → servos (ROS: gait_controller)
+  GaitController     ESP32 packets → GaitEngine inputs; engine output → servos
   Servos             Joint angles ↔ servo angles, Servo 2040 output, switches, current sense
-  Imu, Ism330dhcx    ISM330DHCX driver (port of hexapod-ros2's) and Madgwick filter
+  Imu, Ism330dhcx    ISM330DHCX driver and Madgwick filter
   DataPacket         I²C packets exchanged with the ESP32
   ConfigManager      Calibration offsets in RP2040 flash
 external/
-  hexapod-gait-core  Submodule, pinned to a release tag
+  hexapod-gait-core  Submodule, pinned to a release tag (v0.5.0)
   pimoroni-pico      Submodule, tracking Pimoroni's main
 ```
 
@@ -62,14 +61,20 @@ catching up.
 The servos have no position or effort feedback. The engine is told once, at boot, that the legs
 are in the seated pose `begin()` has just put them in, and runs open loop after that. With no foot
 forces, `load_balancing` and `terrain_adaptation` are off in `robot::gaitParams()`. Settings not
-set there keep the hexapod-ros2 defaults.
+set there keep gait-core's defaults.
 
-| hexapod-ros2 | Here |
-| --- | --- |
-| `gait_controller` node | `GaitController` |
-| `ism330dhcx_node` + `imu_filter_madgwick` | `Ism330dhcx` + `Imu` |
-| `/cmd_vel`, `/body_pose` | Joysticks in `ControlPacket` |
-| ST3215 hardware interface | `Servos` |
+### Servo power and battery
+
+There is no servo power switch, so the engine's `servoPower` output starts and stops the PWM
+signals: off, the servos go limp. Powering back up (any stand command) puts the legs in the
+seated pose, as at boot, before the engine stands. The engine's lost-servo check
+(`servo_loss_timeout`) is off, because it works by joint states stopping and these servos never
+send any.
+
+`robot::BATTERY_MONITORING` feeds the Servo 2040's supply voltage and current to gait-core's
+`BatteryMonitor`, which warns when it's low and sits down and stops the servos at critical. It's
+off until `robot::batteryParams()` has thresholds for
+whatever feeds the servo rail: the defaults are for a 3S pack.
 
 ### Joint-to-servo mapping
 
@@ -80,7 +85,7 @@ femur, tibia).
 servo° = JOINT_DIRECTION × (joint° − JOINT_CENTRE_DEG) + calibration offset, clamped to ±90°
 ```
 
-`JOINT_DIRECTION` is `{1, 1, −1}`, matching hexapod-ros2's `tibia_direction`. The tibia is
+`JOINT_DIRECTION` is `{1, 1, −1}` (the tibia servo turns the other way). The tibia is
 centred at 90° because a ±90° servo can't otherwise reach its working range, and the femur and
 tibia limits in `robot::geometry()` are narrowed to what the servos can reach. Both are set in
 `RobotConfig.h`.
@@ -121,6 +126,7 @@ struct HexPacket {               // Servo 2040 → ESP32
 | `CMD_HOME_STANCE` | Stand up |
 | `CMD_REQUEST_CONFIG` | `[0]` leg; its offsets are returned in `legConfigs` |
 | `CMD_SIT` | `[0]` 1 sit, 0 stand |
+| `CMD_POWER_DOWN` | Sit, then stop the servos. A stand (`CMD_SIT 0` or `CMD_HOME_STANCE`) starts them again |
 
 A command is applied once, when it or its arguments change. `Gait` and `Mode` values equal
 gait-core's (checked with `static_assert`). If 20 reads in a row fail (200 ms), the sticks count
@@ -128,7 +134,7 @@ as centred. New commands must be appended so existing values don't change.
 
 ## Development notes
 
-- **Gait changes belong in hexapod-gait-core**, so hexapod-ros2 gets them too. To update it, check
+- **Gait changes belong in hexapod-gait-core**, not here. To update it, check
   out a newer tag in `external/hexapod-gait-core`, rebuild, and commit the submodule.
 - **pimoroni-pico:** `external/CMakeLists.txt` includes only the `servo2040`, `button`, `analogmux`
   and `analog` `.cmake` files. Don't `add_subdirectory()` the whole repository: it builds every

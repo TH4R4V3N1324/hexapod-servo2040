@@ -94,7 +94,8 @@ target_link_libraries(${PROJECT_NAME}
         button
         analogmux
         analog
-        gait_core
+        gait_core::gait_core
+        gait_core::behaviour
         )
 
 pico_add_extra_outputs(Hexapod)

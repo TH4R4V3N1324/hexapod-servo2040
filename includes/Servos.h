@@ -31,6 +31,7 @@ private:
                               PIN_UNUSED, servo::servo2040::SHARED_ADC);
     Analog cur_adc = Analog(servo::servo2040::SHARED_ADC, servo::servo2040::CURRENT_GAIN,
                             servo::servo2040::SHUNT_RESISTOR, servo::servo2040::CURRENT_OFFSET);
+    Analog vol_adc = Analog(servo::servo2040::SHARED_ADC, servo::servo2040::VOLTAGE_GAIN);
 
     // Contact switch of each leg, on the analog mux sensor inputs
     static constexpr std::array<uint, gait_core::NUM_LEGS> legSwitch = {
@@ -60,10 +61,16 @@ public:
     */
     void write(int legNum, const ServoDegrees& degrees);
     void disable(int legNum);
+    /**
+     * @brief Stop every servo's PWM signal, so they go limp (the nearest this board has to a power switch)
+     * @note write() starts a leg's servos again
+    */
+    void disableAll();
 
     bool switchPressed(int legNum);
     bool allLegsGrounded();
-    float currentDraw();
+    float currentDraw();     // A, all servos together
+    float supplyVoltage();   // V, the servo supply
 };
 
 #endif

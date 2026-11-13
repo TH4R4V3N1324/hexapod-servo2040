@@ -22,7 +22,7 @@ bool Servos::init() {
 }
 
 /**
- * @note gait_core's (and the URDF's) coxa angle is anticlockwise from straight out along the leg,
+ * @note gait_core's coxa angle is anticlockwise from straight out along the leg,
  *       femur is positive lowering the femur, and tibia is 0 with the tibia in line with the femur.
  *       See robot::JOINT_DIRECTION for how they map onto the servos.
 */
@@ -58,6 +58,12 @@ void Servos::disable(int legNum) {
     }
 }
 
+void Servos::disableAll() {
+    for (int legNum = 0; legNum < gait_core::NUM_LEGS; ++legNum) {
+        disable(legNum);
+    }
+}
+
 bool Servos::switchPressed(int legNum) {
     mux.select(legSwitch[legNum]);
     return mux.read();
@@ -75,4 +81,9 @@ bool Servos::allLegsGrounded() {
 float Servos::currentDraw() {
     mux.select(servo::servo2040::CURRENT_SENSE_ADDR);
     return cur_adc.read_current();
+}
+
+float Servos::supplyVoltage() {
+    mux.select(servo::servo2040::VOLTAGE_SENSE_ADDR);
+    return vol_adc.read_voltage();
 }

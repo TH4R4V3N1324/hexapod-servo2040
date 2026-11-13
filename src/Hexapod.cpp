@@ -44,6 +44,9 @@ int main() {
             imu.rollPitchYaw(roll, pitch, yaw);
             controller.onImu(roll, pitch, yaw, now);
         }
+        if (robot::BATTERY_MONITORING) {
+            controller.onPower(servos.supplyVoltage(), servos.currentDraw(), now);
+        }
         controller.update(dt, now, controlPacket, commsOk);
 
         controller.fillTelemetry(hexPacket);

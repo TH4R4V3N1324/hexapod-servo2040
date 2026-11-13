@@ -35,7 +35,8 @@ enum Command : uint8_t {
     CMD_SET_CONFIG,
     CMD_HOME_STANCE,     // stand up; the feet return to their stance by themselves when idle
 	CMD_REQUEST_CONFIG,
-    CMD_SIT              // commandArgs[0]: 1 sit down, 0 stand up
+    CMD_SIT,             // commandArgs[0]: 1 sit down, 0 stand up
+    CMD_POWER_DOWN       // sit down, then stop the servos; a stand command starts them again
 };
 
 // Define the data structure with no padding
