@@ -1,6 +1,6 @@
 # Generated Cmake Pico project file
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)  # 3.16 for hexapod-gait-core
 #message([WARNING] "Hello")
 
 #set(CMAKE_C_COMPILER "c:\Users\Raven\.pico-sdk\ninja\v1.11.1")
@@ -17,9 +17,9 @@ if(WIN32)
 else()
     set(USERHOME $ENV{HOME})
 endif()
-set(sdkVersion 1.5.1)
-set(toolchainVersion 13_2_Rel1)
-set(picotoolVersion 1.5.1)
+set(sdkVersion 2.1.1)
+set(toolchainVersion 14_2_Rel1)
+set(picotoolVersion 2.1.1)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if (EXISTS ${picoVscode})
     include(${picoVscode})
@@ -30,8 +30,9 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-if (PICO_SDK_VERSION_STRING VERSION_LESS "1.4.0")
-  message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.4.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
+# The Pimoroni libraries use SDK 2 APIs
+if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
+  message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.0.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
 project(Hexapod CXX C ASM)
@@ -43,19 +44,22 @@ add_subdirectory("external")
 # Add executable. Default name is the project name, version 0.1
 
 set(${PROJECT_NAME}_SRCS
-    src/Animation.cpp
-    src/Calculate.cpp
     src/Hexapod.cpp
-    src/Move.cpp
+    src/GaitController.cpp
+    src/Servos.cpp
+    src/Imu.cpp
+    src/Ism330dhcx.cpp
     src/DataPacket.cpp
     src/ConfigManager.cpp
 )
 
 set(${PROJECT_NAME}_HDRS
-    includes/Animation.h
-    includes/Calculate.h
     includes/Hexapod.h
-    includes/Move.h
+    includes/GaitController.h
+    includes/Servos.h
+    includes/Imu.h
+    includes/Ism330dhcx.h
+    includes/RobotConfig.h
     includes/DataPacket.h
     includes/ConfigManager.h
 )
@@ -90,6 +94,7 @@ target_link_libraries(${PROJECT_NAME}
         button
         analogmux
         analog
+        gait_core
         )
 
 pico_add_extra_outputs(Hexapod)

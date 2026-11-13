@@ -1,0 +1,6 @@
+[submodule "external/hexapod-gait-core"]
+	path = external/hexapod-gait-core
+	url = https://github.com/TH4R4V3N1324/hexapod-gait-core.git
+[submodule "external/pimoroni-pico"]
+	path = external/pimoroni-pico
+	url = https://github.com/pimoroni/pimoroni-pico.git

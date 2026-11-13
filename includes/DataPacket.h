@@ -12,6 +12,7 @@
 #define SDA_PIN 20
 #define SCL_PIN 21
 
+// Gait and Mode wire values match gait_core's; MODE_CONFIG is handled by the firmware itself
 enum Gait : uint8_t {
     GAIT_TRIPOD,
     GAIT_RIPPLE,
@@ -32,8 +33,9 @@ enum Command : uint8_t {
     CMD_SET_GAIT,
     CMD_SET_MODE,
     CMD_SET_CONFIG,
-    CMD_HOME_STANCE,
-	CMD_REQUEST_CONFIG
+    CMD_HOME_STANCE,     // stand up; the feet return to their stance by themselves when idle
+	CMD_REQUEST_CONFIG,
+    CMD_SIT              // commandArgs[0]: 1 sit down, 0 stand up
 };
 
 // Define the data structure with no padding
@@ -62,7 +64,7 @@ struct HexPacket {
 extern ControlPacket controlPacket;
 extern HexPacket hexPacket;
 
-void ReadInputData();
+bool ReadInputData();
 void SendHexData();
 void InitI2C();
 bool CommandChanged();

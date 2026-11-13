@@ -7,15 +7,19 @@ int16_t lastArgs[3] = {0, 0, 0};
 ControlPacket controlPacket;
 HexPacket hexPacket;
 
-// Requests data from ESP32 and writes data to controlData structure
-void ReadInputData() {
+// Requests data from ESP32 and writes it to controlPacket; a failed or short read leaves controlPacket unchanged
+bool ReadInputData() {
     i2c_write_blocking(I2C_PORT, ESP32_SLAVE_ADDR, NULL, 0, true);
 
-    int bytesRead = i2c_read_blocking(I2C_PORT, ESP32_SLAVE_ADDR, (uint8_t*)&controlPacket, sizeof(controlPacket), false);
+    ControlPacket received;
+    int bytesRead = i2c_read_blocking(I2C_PORT, ESP32_SLAVE_ADDR, (uint8_t*)&received, sizeof(received), false);
 
-    if (bytesRead != sizeof(controlPacket)) {
+    if (bytesRead != sizeof(received)) {
         printf("Failed to read data from ESP32. Bytes read: %d\n", bytesRead);
+        return false;
     }
+    controlPacket = received;
+    return true;
 }
 
 // Sends hexapod data to ESP32 stored in hexPacket
