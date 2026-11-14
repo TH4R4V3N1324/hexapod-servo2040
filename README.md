@@ -44,7 +44,7 @@ includes/, src/
   GaitController     ESP32 packets → GaitEngine inputs; engine output → servos
   Servos             Joint angles ↔ servo angles, Servo 2040 output, switches, current sense
   Imu, Ism330dhcx    ISM330DHCX driver and Madgwick filter
-  DataPacket         I²C packets exchanged with the ESP32
+  DataPacket         I²C with the ESP32 receiver (the packets themselves are gait-core's protocol)
   ConfigManager      Calibration offsets in RP2040 flash
 external/
   hexapod-gait-core  Submodule, pinned to a release tag (v0.5.0)
@@ -98,39 +98,50 @@ without levelling.
 
 ## ESP32 interface
 
-The packets in `includes/DataPacket.h` are packed and must stay byte-compatible with the ESP32
-firmware. The Servo 2040 is the I²C master at 100 kHz; the ESP32 is at `0x08`.
+The packets come from hexapod-gait-core (`hexapod_protocol/packets.h`), shared with the receiver
+firmware. The Servo 2040 is the I²C master at 100 kHz; the ESP32 receiver is at `0x08`.
 
 ```cpp
-struct ControlPacket {           // ESP32 → Servo 2040
+struct ControlPacket {           // ESP32 → Servo 2040, 22 bytes
+    uint8_t version;             // HEXAPOD_PROTOCOL_VERSION (2)
     int16_t joystick1X, joystick1Y, joystick2X, joystick2Y;  // ±128, X right, Y forward
+    int16_t tiltYaw;             // tilt mode: yaw, positive turns left
+    int16_t tiltZ;               // tilt mode: raise the body
     int16_t currentHeight;       // body height in mm, 0 = unchanged
     Command command;
     int16_t commandArgs[3];
 };
 
-struct HexPacket {               // Servo 2040 → ESP32
+struct HexPacket {               // Servo 2040 → ESP32, 12 bytes
+    uint8_t version;             // HEXAPOD_PROTOCOL_VERSION (2)
     int16_t legConfigs[3];       // calibration offsets requested with CMD_REQUEST_CONFIG
     int16_t currentHeight;       // mm
-    int8_t currentPhase;         // always 0
     Gait currentGait;
     Mode currentMode;
+    uint8_t flags;               // HEX_FLAG_SEATED, HEX_FLAG_SERVO_POWER, HEX_FLAG_FEATURE(f)
 };
 ```
+
+The packets are defined once, in hexapod-gait-core's `include/hexapod_protocol/packets.h`, which the
+controllers include too. Packets with another size or version are dropped, and the firmware says
+so on the serial monitor.
 
 | Command | Arguments |
 | --- | --- |
 | `CMD_SET_GAIT` | `[0]` gait |
-| `CMD_SET_MODE` | `[0]` mode. `MODE_CONFIG` (all servos to 0° + offset) is handled here, not by the engine |
+| `CMD_SET_MODE` | `[0]` mode. `MODE_CONFIG` (every joint to its centre plus its offset) is handled here, not by the engine |
 | `CMD_SET_CONFIG` | `[0]` leg 0–5, `[1]` joint 0–2, `[2]` offset in degrees (clamped to ±60) |
 | `CMD_HOME_STANCE` | Stand up |
 | `CMD_REQUEST_CONFIG` | `[0]` leg; its offsets are returned in `legConfigs` |
-| `CMD_SIT` | `[0]` 1 sit, 0 stand |
-| `CMD_POWER_DOWN` | Sit, then stop the servos. A stand (`CMD_SIT 0` or `CMD_HOME_STANCE`) starts them again |
+| `CMD_SIT` | `[0]` 1 sit, 0 stand. Standing powers the servos up if they're off |
+| `CMD_POWER_DOWN` | Sit down, then turn servo power off |
+| `CMD_SET_FEATURE` | `[0]` feature (terrain adaptation, walk leveling, load balancing, tilt leveling), `[1]` 1 on, 0 off |
+
+The hobby servos give no feedback, so terrain adaptation and load balancing stay off: `CMD_SET_FEATURE` refuses to turn them on. `flags` reports what's on, whether the robot is seated, and whether the servos are
+powered, so a controller can toggle features and sit or stand without guessing.
 
 A command is applied once, when it or its arguments change. `Gait` and `Mode` values equal
-gait-core's (checked with `static_assert`). If 20 reads in a row fail (200 ms), the sticks count
-as centred. New commands must be appended so existing values don't change.
+gait-core's (checked with `static_assert`). If 20 reads in a row fail (200 ms), the sticks count as centred. New commands must be appended so existing values don't change.
 
 ## Development notes
 

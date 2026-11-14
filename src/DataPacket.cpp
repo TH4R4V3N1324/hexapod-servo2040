@@ -18,6 +18,17 @@ bool ReadInputData() {
         printf("Failed to read data from ESP32. Bytes read: %d\n", bytesRead);
         return false;
     }
+    if (received.version != HEXAPOD_PROTOCOL_VERSION) {
+        // Counts as a failed read, so the sticks centre if it keeps happening
+        static absolute_time_t lastReport = nil_time;
+        if (absolute_time_diff_us(lastReport, get_absolute_time()) > 5000000) {
+            lastReport = get_absolute_time();
+            printf("Ignored a version %d packet from the ESP32: expected version %d. "
+                   "Update the receiver to the same hexapod-gait-core.\n",
+                   received.version, HEXAPOD_PROTOCOL_VERSION);
+        }
+        return false;
+    }
     controlPacket = received;
     return true;
 }
