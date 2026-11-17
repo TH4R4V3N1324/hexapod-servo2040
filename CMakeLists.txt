@@ -96,6 +96,8 @@ target_link_libraries(${PROJECT_NAME}
         analog
         gait_core::gait_core
         gait_core::behaviour
+        gait_core::robots
+        gait_core::protocol
         )
 
 pico_add_extra_outputs(Hexapod)

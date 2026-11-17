@@ -26,21 +26,21 @@ bool Servos::init() {
  *       femur is positive lowering the femur, and tibia is 0 with the tibia in line with the femur.
  *       See robot::JOINT_DIRECTION for how they map onto the servos.
 */
-ServoDegrees Servos::toServoDegrees(int /*legNum*/, const gait_core::JointAngles& angles) {
-    const float joints[3] = {angles.coxa, angles.femur, angles.tibia};
-    ServoDegrees degrees;
-    for (int joint = 0; joint < 3; ++joint) {
-        degrees[joint] = robot::JOINT_DIRECTION[joint] * (joints[joint] * RAD_TO_DEG - robot::JOINT_CENTRE_DEG[joint]);
+ServoDegrees Servos::toServoDegrees(int /*legNum*/, const gait_core::JointVec& angles) {
+    ServoDegrees degrees{};
+    const int joints = std::min<int>(angles.size(), robot::JOINTS_PER_LEG);
+    for (int joint = 0; joint < joints; ++joint) {
+        degrees[joint] = robot::JOINT_DIRECTION[joint] * (angles(joint) * RAD_TO_DEG - robot::JOINT_CENTRE_DEG[joint]);
     }
     return degrees;
 }
 
-gait_core::JointAngles Servos::toJointAngles(int /*legNum*/, const ServoDegrees& degrees) {
-    float joints[3];
-    for (int joint = 0; joint < 3; ++joint) {
-        joints[joint] = (degrees[joint] / robot::JOINT_DIRECTION[joint] + robot::JOINT_CENTRE_DEG[joint]) * DEG_TO_RAD;
+gait_core::JointVec Servos::toJointAngles(int /*legNum*/, const ServoDegrees& degrees) {
+    gait_core::JointVec joints(robot::JOINTS_PER_LEG);
+    for (int joint = 0; joint < robot::JOINTS_PER_LEG; ++joint) {
+        joints(joint) = (degrees[joint] / robot::JOINT_DIRECTION[joint] + robot::JOINT_CENTRE_DEG[joint]) * DEG_TO_RAD;
     }
-    return {joints[0], joints[1], joints[2]};
+    return joints;
 }
 
 void Servos::write(int legNum, const ServoDegrees& degrees) {
@@ -59,7 +59,7 @@ void Servos::disable(int legNum) {
 }
 
 void Servos::disableAll() {
-    for (int legNum = 0; legNum < gait_core::NUM_LEGS; ++legNum) {
+    for (int legNum = 0; legNum < robot::NUM_LEGS; ++legNum) {
         disable(legNum);
     }
 }
@@ -70,7 +70,7 @@ bool Servos::switchPressed(int legNum) {
 }
 
 bool Servos::allLegsGrounded() {
-    for (int legNum = 0; legNum < gait_core::NUM_LEGS; ++legNum) {
+    for (int legNum = 0; legNum < robot::NUM_LEGS; ++legNum) {
         if (!switchPressed(legNum)) {
             return false;
         }

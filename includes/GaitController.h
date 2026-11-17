@@ -4,10 +4,12 @@
 #include <array>
 #include <cstdint>
 
-#include "gait_core/gait_engine.hpp"
-#include "hexapod_behaviour/battery_monitor.hpp"
+#include "gait_core/behaviour/battery_monitor.hpp"
+#include "gait_core/locomotion/gait_engine.hpp"
+#include "gait_core/robot/robot_definition.hpp"
 
 #include "DataPacket.h"
+#include "RobotConfig.h"
 #include "Servos.h"
 
 /**
@@ -19,7 +21,8 @@
  *
  *       The PWM servos give no position or effort feedback, so the engine is told the legs start in
  *       the seated pose (begin() puts them there) and runs open loop after that. The IMU's
- *       orientation comes in through onImu().
+ *       orientation comes in through onImu(), and the controller's (LB held, tilt mode) in each
+ *       ControlPacket.
  *
  *       Servo power follows the engine's GaitOutput::servoPower: off stops the PWM signals, and on
  *       again puts the legs back in the seated pose, as at boot, for the engine to stand up from.
@@ -68,14 +71,15 @@ public:
 
 private:
     Servos& servos;
+    const gait_core::RobotDefinition robotDef;  // before engine, which is built from it
     gait_core::GaitEngine engine;
-    hexapod_behaviour::BatteryMonitor battery;
+    gait_core::behaviour::BatteryMonitor battery;
 
     gait_core::VelocityCommand filteredVelocity{};
     bool servosPowered = false; // PWM signals running
 
     // Servo angles last written to each leg (deg, before calibration offsets)
-    std::array<ServoDegrees, gait_core::NUM_LEGS> servoOutput{};
+    std::array<ServoDegrees, robot::NUM_LEGS> servoOutput{};
 
     bool configMode = false;    // MODE_CONFIG: every servo held at 0 for calibration
     bool blending = false;      // slewing between the calibration pose and the engine's output
@@ -85,7 +89,7 @@ private:
     void seatLegs();
     void followServoPower(bool power);
     void updateBattery(uint64_t nowUs);
-    void applySticks(const ControlPacket& packet, bool commsOk);
+    void applySticks(const ControlPacket& packet, bool commsOk, uint64_t nowUs);
     void applyHeight(int16_t heightMm);
     void writeServos(const gait_core::GaitOutput& output, gait_core::Scalar dt);
 };

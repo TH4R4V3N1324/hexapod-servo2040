@@ -8,8 +8,8 @@
 #include "analogmux.hpp"
 #include "analog.hpp"
 
-#include "gait_core/kinematic_solver.hpp"
-#include "gait_core/robot_geometry.hpp"
+#include "gait_core/robots/explorer.hpp"
+#include "gait_core/types.hpp"
 
 /**
  * @brief Servo angles of one leg in degrees: coxa, femur, tibia
@@ -34,7 +34,7 @@ private:
     Analog vol_adc = Analog(servo::servo2040::SHARED_ADC, servo::servo2040::VOLTAGE_GAIN);
 
     // Contact switch of each leg, on the analog mux sensor inputs
-    static constexpr std::array<uint, gait_core::NUM_LEGS> legSwitch = {
+    static constexpr std::array<uint, gait_core::explorer::NUM_LEGS> legSwitch = {
         servo::servo2040::SENSOR_1_ADDR, servo::servo2040::SENSOR_2_ADDR, servo::servo2040::SENSOR_3_ADDR,
         servo::servo2040::SENSOR_4_ADDR, servo::servo2040::SENSOR_5_ADDR, servo::servo2040::SENSOR_6_ADDR,
     };
@@ -46,13 +46,13 @@ public:
     bool init();
 
     /**
-     * @brief gait_core joint angles (rad) to servo angles (deg), before calibration offsets
+     * @brief gait_core joint angles (rad: coxa, femur, tibia) to servo angles (deg), before calibration offsets
     */
-    static ServoDegrees toServoDegrees(int legNum, const gait_core::JointAngles& angles);
+    static ServoDegrees toServoDegrees(int legNum, const gait_core::JointVec& angles);
     /**
      * @brief Servo angles (deg, before calibration offsets) back to gait_core joint angles (rad)
     */
-    static gait_core::JointAngles toJointAngles(int legNum, const ServoDegrees& degrees);
+    static gait_core::JointVec toJointAngles(int legNum, const ServoDegrees& degrees);
 
     /**
      * @brief Move a leg's servos, adding its calibration offsets and clamping to the servo range

@@ -9,17 +9,19 @@
 #include "RobotConfig.h"
 
 using gait_core::Scalar;
-using gait_core::NUM_LEGS;
+using robot::NUM_LEGS;
+using robot::JOINTS_PER_LEG;
 
 // The wire values of Gait and Mode are passed straight to the engine
-static_assert(static_cast<int>(::GAIT_TRIPOD) == gait_core::GAIT_TRIPOD &&
-              static_cast<int>(::GAIT_RIPPLE) == gait_core::GAIT_RIPPLE &&
-              static_cast<int>(::GAIT_WAVE) == gait_core::GAIT_WAVE &&
-              static_cast<int>(::NUM_GAITS) == gait_core::NUM_GAITS, "Gait values must match gait_core");
+static_assert(static_cast<int>(::GAIT_TRIPOD) == gait_core::explorer::GAIT_TRIPOD &&
+              static_cast<int>(::GAIT_RIPPLE) == gait_core::explorer::GAIT_RIPPLE &&
+              static_cast<int>(::GAIT_WAVE) == gait_core::explorer::GAIT_WAVE &&
+              static_cast<int>(::NUM_GAITS) == gait_core::explorer::NUM_GAITS, "Gait values must match explorer's");
 static_assert(static_cast<int>(::MODE_NORMAL) == gait_core::MODE_NORMAL &&
               static_cast<int>(::MODE_STRAFE) == gait_core::MODE_STRAFE &&
               static_cast<int>(::MODE_TILT) == gait_core::MODE_TILT &&
               static_cast<int>(::MODE_CONFIG) == gait_core::NUM_MODES, "Mode values must match gait_core");
+static_assert(JOINTS_PER_LEG <= HEXAPOD_MAX_JOINTS_PER_LEG, "HexPacket.legConfigs can't hold a leg's offsets");
 
 namespace {
 
@@ -78,7 +80,10 @@ const char* levelName(gait_core::LogLevel level) {
 }  // namespace
 
 GaitController::GaitController(Servos& servos)
-    : servos(servos), engine(robot::gaitParams(), robot::geometry()), battery(1, robot::batteryParams()) {
+    : servos(servos),
+      robotDef(robot::robotDefinition()),
+      engine(robot::gaitParams(), robotDef),
+      battery(1, robot::batteryParams()) {
     engine.log = [](gait_core::LogLevel level, const char* message) {
         printf("[gait %s] %s\n", levelName(level), message);
     };
@@ -102,11 +107,17 @@ void GaitController::begin() {
 */
 void GaitController::seatLegs() {
     const gait_core::GaitParams& p = engine.params();
-    const gait_core::KinematicSolver ik(robot::geometry());
-    const gait_core::JointAngles seated = ik.solveIK(gait_core::Vec3(p.sit_reach, 0, -p.sit_height));
 
     gait_core::JointFeedback feedback;
     for (int legNum = 0; legNum < NUM_LEGS; ++legNum) {
+        // explorer's legs are coxa/femur/tibia, which this analytic solver handles exactly
+        const gait_core::LegDefinition& leg = robotDef.legs[legNum];
+        const gait_core::YawPitchPitchLeg kinematics(leg);
+        const gait_core::Vec3 foot = gait_core::Vec3(p.sit_reach, 0, -p.sit_height) + leg.stanceOffset;
+        gait_core::JointVec seated;
+        if (!kinematics.ik(foot, gait_core::JointVec::Zero(JOINTS_PER_LEG), seated)) {
+            printf("[gait] leg %d can't reach the seated pose\n", legNum);
+        }
         servoOutput[legNum] = Servos::toServoDegrees(legNum, seated);
         servos.write(legNum, servoOutput[legNum]);
         sleep_ms(robot::BOOT_LEG_STAGGER_MS);
@@ -143,7 +154,7 @@ void GaitController::updateBattery(uint64_t nowUs) {
     if (!robot::BATTERY_MONITORING) {
         return;
     }
-    const hexapod_behaviour::BatteryStatus status = battery.update(static_cast<gait_core::Timestamp>(nowUs) * 1000);
+    const gait_core::behaviour::BatteryStatus status = battery.update(static_cast<gait_core::Timestamp>(nowUs) * 1000);
     if (status.sit) {
         const gait_core::CommandResult result = status.powerOff ? engine.powerDown() : engine.sit(true);
         if (!result.success) {
@@ -162,7 +173,7 @@ void GaitController::handleCommand(const ControlPacket& packet) {
     const int16_t* args = packet.commandArgs;
     switch (packet.command) {
         case CMD_SET_GAIT:
-            if (args[0] >= 0 && args[0] < NUM_GAITS) {
+            if (args[0] >= 0 && args[0] < engine.gaitConfig().numGaits()) {
                 engine.setGait(static_cast<uint8_t>(args[0]));
             } else {
                 printf("Ignored invalid gait %d\n", args[0]);
@@ -190,7 +201,7 @@ void GaitController::handleCommand(const ControlPacket& packet) {
             break;
 
         case CMD_SET_CONFIG:
-            if (args[0] >= 0 && args[0] < NUM_LEGS && args[1] >= 0 && args[1] < 3) {
+            if (args[0] >= 0 && args[0] < NUM_LEGS && args[1] >= 0 && args[1] < JOINTS_PER_LEG) {
                 configManager.SetLegConfig(args[0], args[1], args[2]);
             } else {
                 printf("Ignored calibration for leg %d joint %d\n", args[0], args[1]);
@@ -239,9 +250,10 @@ void GaitController::handleCommand(const ControlPacket& packet) {
  * @note Sticks: X positive is right, Y positive is forward. Left stick drives, right stick X turns.
  *       In normal mode the engine turns with the left stick's
  *       X instead of strafing. In tilt mode the left stick shifts the body, the right stick
- *       rolls and pitches it, tiltYaw yaws it and tiltZ raises and lowers it.
+ *       rolls and pitches it, tiltYaw yaws it and tiltZ raises and lowers it. While the controller
+ *       sends its orientation (LB held), the body follows that instead, relative to the press.
 */
-void GaitController::applySticks(const ControlPacket& packet, bool commsOk) {
+void GaitController::applySticks(const ControlPacket& packet, bool commsOk, uint64_t nowUs) {
     Scalar lx = 0, ly = 0, rx = 0, ry = 0, yaw = 0, z = 0;
     if (commsOk && !configMode) {
         lx = stick(packet.joystick1X);
@@ -253,7 +265,22 @@ void GaitController::applySticks(const ControlPacket& packet, bool commsOk) {
     }
 
     gait_core::VelocityCommand command{};
-    if (engine.gaitConfig().currentMode == gait_core::MODE_TILT) {
+    const bool tiltMode = engine.gaitConfig().currentMode == gait_core::MODE_TILT;
+    const bool controllerTilt = tiltMode && commsOk && !configMode && packet.controllerTilt != 0;
+    if (controllerTilt) {
+        gait_core::ImuSample controller;
+        controller.roll = static_cast<Scalar>(packet.controllerRoll) / HEXAPOD_ANGLE_MILLIRAD_SCALE;
+        controller.pitch = static_cast<Scalar>(packet.controllerPitch) / HEXAPOD_ANGLE_MILLIRAD_SCALE;
+        controller.yaw = static_cast<Scalar>(packet.controllerYaw) / HEXAPOD_ANGLE_MILLIRAD_SCALE;
+        controller.stamp = static_cast<gait_core::Timestamp>(nowUs) * 1000;
+        engine.setControllerImu(controller, true);
+    } else if (engine.controllerTiltActive()) {
+        engine.setControllerImu(gait_core::ImuSample{}, false);  // released: back to neutral
+    }
+
+    if (controllerTilt) {
+        // The engine holds the controller's orientation as the body pose
+    } else if (tiltMode) {
         const gait_core::GaitParams& p = engine.params();
         engine.setBodyPose(rx * p.tilt_max_angle,     // stick right lowers the right side
                            ry * p.tilt_max_angle,     // stick forward lowers the nose
@@ -294,7 +321,7 @@ void GaitController::applyHeight(int16_t heightMm) {
 }
 
 void GaitController::update(Scalar dt, uint64_t nowUs, const ControlPacket& packet, bool commsOk) {
-    applySticks(packet, commsOk);
+    applySticks(packet, commsOk, nowUs);
     if (commsOk) {
         applyHeight(packet.currentHeight);
     }
@@ -336,7 +363,7 @@ void GaitController::writeServos(const gait_core::GaitOutput& output, Scalar dt)
         const float maxStep = robot::CONFIG_SLEW_DEG_PER_S * dt;
         bool arrived = true;
         for (int legNum = 0; legNum < NUM_LEGS; ++legNum) {
-            for (int joint = 0; joint < 3; ++joint) {
+            for (int joint = 0; joint < JOINTS_PER_LEG; ++joint) {
                 float& value = servoOutput[legNum][joint];
                 const float error = target[legNum][joint] - value;
                 value += std::clamp(error, -maxStep, maxStep);
@@ -355,8 +382,11 @@ void GaitController::writeServos(const gait_core::GaitOutput& output, Scalar dt)
 
 void GaitController::fillTelemetry(HexPacket& packet) const {
     const gait_core::GaitConfig& config = engine.gaitConfig();
-    memcpy(packet.legConfigs, configManager.getLegOffsets(requestedConfigLeg), sizeof(packet.legConfigs));
+    // Body to foot, 0 past the leg's last joint
+    memset(packet.legConfigs, 0, sizeof(packet.legConfigs));
+    memcpy(packet.legConfigs, configManager.getLegOffsets(requestedConfigLeg), sizeof(int16_t) * JOINTS_PER_LEG);
     packet.version = HEXAPOD_PROTOCOL_VERSION;
+    packet.numGaits = static_cast<uint8_t>(config.numGaits());
     packet.currentHeight = static_cast<int16_t>(std::lround(-config.currentHeight * 1000));
     packet.currentGait = static_cast<Gait>(config.gaitChangeRequested ? config.pendingGait : config.currentGait);
     packet.currentMode = configMode ? MODE_CONFIG : static_cast<Mode>(config.currentMode);

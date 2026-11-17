@@ -5,18 +5,18 @@
 #include <array>
 #include <cstdint>
 
-#include "gait_core/gait_engine.hpp"
-#include "gait_core/robot_geometry.hpp"
-#include "hexapod_behaviour/battery_monitor.hpp"
+#include "gait_core/behaviour/battery_monitor.hpp"
+#include "gait_core/locomotion/gait_engine.hpp"
+#include "gait_core/robots/explorer.hpp"
 
 /**
- * Everything specific to running the Explorer on a Servo 2040: its shape (gait_core's preset),
+ * Everything specific to running the Explorer on a Servo 2040: its shape (gait_core::robots' explorer),
  * the gait settings and how gait_core's joint angles map onto the PWM servos.
  *
  * gait_core works in SI units with the body frame +x forward, +y left, +z up, and legs indexed
  * 0-5 clockwise from the front right (leg1-leg6 on the robot):
  *
- *   gait_core::Leg       leg        servos
+ *   explorer::Leg        leg        servos
  *   LEG_FRONT_RIGHT  0   leg1       0, 1, 2      (coxa, femur, tibia)
  *   LEG_MIDDLE_RIGHT 1   leg2       3, 4, 5
  *   LEG_REAR_RIGHT   2   leg3       6, 7, 8
@@ -32,18 +32,25 @@ using gait_core::Scalar;
 // Geometry
 // ---------------------------------------------------------------------------------------------
 
+constexpr int NUM_LEGS = gait_core::explorer::NUM_LEGS;
+constexpr int JOINTS_PER_LEG = 3;  // coxa, femur, tibia (gait_core::YawPitchPitchLeg)
+
 /**
- * @brief The Explorer (gait_core's preset), with the joint limits narrowed to what a
+ * @brief The Explorer (gait_core::explorer::robot()), with the joint limits narrowed to what a
  *        +-90 degree PWM servo can reach given the joint mapping below
 */
-inline gait_core::RobotGeometry geometry() {
-    gait_core::RobotGeometry g = gait_core::RobotGeometry::explorer();
-    // femur: servo = femur, so +-90 deg (preset: -1.6 to 1.4)
-    g.limits.femurMin = std::max(g.limits.femurMin, Scalar(-1.52));
-    g.limits.femurMax = std::min(g.limits.femurMax, Scalar(1.52));
-    // tibia: servo = -(tibia - 90 deg), so 0 to 180 deg (preset: -0.78 to 2.63)
-    g.limits.tibiaMin = std::max(g.limits.tibiaMin, Scalar(0.05));
-    g.limits.tibiaMax = std::min(g.limits.tibiaMax, Scalar(3.09));
+inline gait_core::RobotDefinition robotDefinition() {
+    gait_core::RobotDefinition g = gait_core::explorer::robot();
+    for (int legNum = 0; legNum < g.numLegs; ++legNum) {
+        gait_core::JointDefinition& femur = g.legs[legNum].joints[1];
+        gait_core::JointDefinition& tibia = g.legs[legNum].joints[2];
+        // femur: servo = femur, so +-90 deg (explorer: -1.6 to 1.4)
+        femur.lower = std::max(femur.lower, Scalar(-1.52));
+        femur.upper = std::min(femur.upper, Scalar(1.52));
+        // tibia: servo = -(tibia - 90 deg), so 0 to 180 deg (explorer: -0.78 to 2.63)
+        tibia.lower = std::max(tibia.lower, Scalar(0.05));
+        tibia.upper = std::min(tibia.upper, Scalar(3.09));
+    }
     return g;
 }
 
@@ -84,8 +91,8 @@ inline gait_core::GaitParams gaitParams() {
 // rail: gait_core's defaults are for a 3S pack and and would sit a 6 V rail down at once.
 constexpr bool BATTERY_MONITORING = false;
 
-inline hexapod_behaviour::BatteryParams batteryParams() {
-    hexapod_behaviour::BatteryParams p;
+inline gait_core::behaviour::BatteryParams batteryParams() {
+    gait_core::behaviour::BatteryParams p;
     // p.warning_voltage = ...;   // V
     // p.critical_voltage = ...;  // V
     return p;
